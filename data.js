@@ -19,8 +19,8 @@ window.SITE = {
   linkedin: "https://www.linkedin.com/in/debendudutta-0b9a21238",
   github: "",            // e.g. "https://github.com/yourusername"
   instagram: "",         // optional
-  photo: "assets/profile.jpg",   // replace with your own photo (same name, or change path)
-  cv: "pdfs/CV_Debendu_Dutta.pdf", // put your CV PDF here (see README)
+  photo: "profile.jpg",   // replace with your own photo (same name, or change path)
+  cv: "CV_Debendu_Dutta.pdf", // put your CV PDF here (see README)
 
   about: [
     "I am an M.Sc. student in Pure Mathematics at IIT Bombay, deeply interested in understanding basic mathematical ideas and structures. My studies focus on proof-based learning, logical thinking, and clear reasoning.",
@@ -122,10 +122,10 @@ window.SITE = {
   /* ---------------- GALLERY ----------------
      Drop your photos in assets/ (or a new folder) and add them here.        */
   gallery: [
-    { src: "assets/mandelbrot.jpg", caption: "Mandelbrot set — complexity from z² + c" },
-    { src: "assets/cantor.jpg", caption: "Cantor set — the first 8 stages" },
-    { src: "assets/torus.jpg", caption: "A torus — the shape of topology" },
-    { src: "assets/complex.jpg", caption: "Domain colouring of a rational function" },
-    { src: "assets/lissajous.jpg", caption: "Lissajous curves" }
+    { src: "mandelbrot.jpg", caption: "Mandelbrot set — complexity from z² + c" },
+    { src: "cantor.jpg", caption: "Cantor set — the first 8 stages" },
+    { src: "torus.jpg", caption: "A torus — the shape of topology" },
+    { src: "complex.jpg", caption: "Domain colouring of a rational function" },
+    { src: "lissajous.jpg", caption: "Lissajous curves" }
   ]
 };
