@@ -16,7 +16,7 @@ window.SITE = {
   ],
   location: "Mumbai, Maharashtra, India  ·  Home: Egra, West Bengal",
   email: "debendu003@gmail.com",
-  linkedin: "https://www.linkedin.com/in/debendudutta-0b9a21238",
+  linkedin: "www.linkedin.com/in/debendu-dutta-0b9a21238",
   github: "",            // e.g. "https://github.com/yourusername"
   instagram: "",         // optional
   photo: "profile.jpg",   // replace with your own photo (same name, or change path)
