@@ -79,13 +79,27 @@
   nav.addEventListener('click', e => { if (e.target.tagName === 'A') nav.classList.remove('open'); });
   const root = document.documentElement;
   try { if (localStorage.getItem('theme') === 'light') root.classList.add('light'); } catch (e) { }
-  $('#themeBtn').onclick = () => { root.classList.toggle('light'); try { localStorage.setItem('theme', root.classList.contains('light') ? 'light' : 'dark'); } catch (e) { } };
+  $('#themeBtn').onclick = () => { root.classList.toggle('light'); try { localStorage.setItem('theme', root.classList.contains('light') ? 'light' : 'dark'); } catch (e) { } sendGraphTheme(); };
 
   addEventListener('scroll', () => { const h = document.documentElement; $('#progress').style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + '%'; }, { passive: true });
 
   const cur = $('#cursor');
   addEventListener('mousemove', e => { cur.style.left = e.clientX + 'px'; cur.style.top = e.clientY + 'px'; });
   document.addEventListener('mouseover', e => cur.classList.toggle('big', !!e.target.closest('a,button,.post,figure,.chips span')));
+
+
+  /* Graphing calculator (iframe): keep its theme in sync, full screen, cursor fix */
+  const gFrame = $('#graphFrame'), gWrap = $('#graphWrap');
+  function sendGraphTheme() {
+    try { gFrame.contentWindow.postMessage({ type: 'plotline-theme', theme: root.classList.contains('light') ? 'light' : 'dark' }, '*'); } catch (e) { }
+  }
+  gFrame.addEventListener('load', sendGraphTheme);
+  $('#graphFull').onclick = () => {
+    const go = gWrap.requestFullscreen ? gWrap.requestFullscreen() : Promise.reject();
+    Promise.resolve(go).catch(() => window.open('plotline.html', '_blank', 'noopener'));
+  };
+  gFrame.addEventListener('mouseenter', () => cur.classList.add('hide'));
+  gFrame.addEventListener('mouseleave', () => cur.classList.remove('hide'));
 
   function tilt(c) {
     c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; c.style.transform = `perspective(700px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateY(-4px)`; });

@@ -1,0 +1,808 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Plotline — 2D Graphing Calculator</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: expression list + math keyboard on the left, square-unit graph canvas filling the rest; stacks (graph first) on phones. */
+:root {
+  --bg: #f4f6f9;
+  --panel: #ffffff;
+  --canvas: #ffffff;
+  --line: #dde2e9;
+  --fg: #1b2330;
+  --muted: #667085;
+  --accent: #2d70b3;
+  --key: #eef1f5;
+  --key-op: #e1ebf6;
+  --grid-minor: #eceff4;
+  --grid-major: #d5dae2;
+  --axis: #3b4454;
+  --err: #b42318;
+  --c0: #c74440; --c1: #2d70b3; --c2: #388c46; --c3: #6042a6; --c4: #d9730d; --c5: #0f8b8d;
+  --font-ui: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-math: "IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1217; --panel: #171b22; --canvas: #12161c; --line: #2a303b; --fg: #e5e9f0; --muted: #98a2b3;
+    --accent: #6aa6e8; --key: #212732; --key-op: #1f3350; --grid-minor: #1b212a; --grid-major: #2a313c; --axis: #aab3c2; --err: #f97066;
+    --c0: #ef7a76; --c1: #6aa6e8; --c2: #6cc27c; --c3: #a28be0; --c4: #f0a04b; --c5: #4cc3c5;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1217; --panel: #171b22; --canvas: #12161c; --line: #2a303b; --fg: #e5e9f0; --muted: #98a2b3;
+  --accent: #6aa6e8; --key: #212732; --key-op: #1f3350; --grid-minor: #1b212a; --grid-major: #2a313c; --axis: #aab3c2; --err: #f97066;
+  --c0: #ef7a76; --c1: #6aa6e8; --c2: #6cc27c; --c3: #a28be0; --c4: #f0a04b; --c5: #4cc3c5;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--font-ui); font-size: 14px;
+  padding-block: 12px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.app { height: 100%; display: grid; grid-template-columns: minmax(300px, 380px) minmax(0, 1fr); gap: 12px; }
+.side, .stage { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; min-width: 0; min-height: 0; }
+.side { display: flex; flex-direction: column; overflow: hidden; }
+.head { padding: 12px 14px 10px 16px; border-bottom: 1px solid var(--line); display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.head h1 { font-size: 17px; font-weight: 600; margin: 0; letter-spacing: -0.01em; text-wrap: balance; }
+.kbt { border: 1px solid var(--line); background: transparent; color: var(--accent); border-radius: 6px; padding: 5px 10px; font: 500 12px var(--font-ui); cursor: pointer; }
+.kbt:hover { background: var(--bg); }
+.kbt[aria-expanded="true"] { background: var(--key-op); }
+.scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.rows { display: flex; flex-direction: column; }
+.row { display: grid; grid-template-columns: 24px minmax(0, 1fr) 28px; align-items: start; gap: 8px; padding: 8px 10px 8px 14px; border-bottom: 1px solid var(--line); }
+.row:focus-within { background: color-mix(in srgb, var(--accent) 6%, var(--panel)); }
+.dot { width: 22px; height: 22px; margin-top: 3px; border-radius: 50%; border: 2px solid var(--c); background: var(--c); padding: 0; cursor: pointer; }
+.dot[aria-pressed="false"] { background: transparent; }
+.row input[type="text"] { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--fg); font: 500 15px/1.6 var(--font-math); padding: 3px 2px; outline: none; }
+.row input[type="text"]::placeholder { color: var(--muted); font-weight: 400; }
+.err { grid-column: 2; color: var(--err); font-size: 12px; margin-top: -2px; }
+.err:empty { display: none; }
+.x { width: 28px; height: 28px; margin-top: 1px; border: 0; background: transparent; color: var(--muted); border-radius: 6px; cursor: pointer; font-size: 18px; line-height: 1; }
+.x:hover { background: var(--bg); color: var(--fg); }
+button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.add { margin: 12px 14px; padding: 8px 12px; border: 1px dashed var(--line); border-radius: 6px; background: transparent; color: var(--accent); font: 500 13px var(--font-ui); cursor: pointer; width: calc(100% - 28px); }
+.add:hover { background: var(--bg); }
+.sliders { padding: 4px 14px 8px; display: flex; flex-direction: column; gap: 10px; }
+.sliders h2 { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin: 6px 0 0; font-weight: 600; }
+.sl { display: grid; grid-template-columns: 22px minmax(0, 1fr) 56px; gap: 10px; align-items: center; }
+.sl b { font: 500 14px var(--font-math); }
+.sl output { font: 400 12px var(--font-math); text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+.sl input[type="range"] { width: 100%; accent-color: var(--accent); margin: 0; }
+.hint { padding: 10px 16px 14px; color: var(--muted); font-size: 12px; line-height: 1.6; border-top: 1px solid var(--line); }
+.hint code { font-family: var(--font-math); color: var(--fg); }
+.kb { border-top: 1px solid var(--line); background: var(--panel); display: flex; flex-direction: column; }
+.kb-tabs { display: flex; gap: 2px; padding: 6px 8px 0; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.kb-tabs button { border: 0; background: transparent; color: var(--muted); font: 500 13px var(--font-ui); padding: 7px 12px; cursor: pointer; border-bottom: 2px solid transparent; white-space: nowrap; }
+.kb-tabs button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); }
+.kb-pad { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; padding: 8px 10px 10px; max-height: 232px; overflow-y: auto; }
+.k { height: 34px; border: 1px solid var(--line); background: var(--key); color: var(--fg); border-radius: 6px; font: 500 14px var(--font-math); cursor: pointer; padding: 0 2px; overflow: hidden; white-space: nowrap; }
+.k:hover { border-color: var(--accent); }
+.k:active { background: var(--key-op); }
+.k.op { background: var(--key-op); }
+.k.act { color: var(--accent); }
+.k.on { background: var(--accent); color: var(--panel); border-color: var(--accent); }
+.stage { position: relative; overflow: hidden; background: var(--canvas); }
+#cv { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: grab; display: block; }
+#cv:active { cursor: grabbing; }
+.tools { position: absolute; top: 10px; right: 10px; display: flex; flex-direction: column; gap: 6px; }
+.tools button { width: 34px; height: 34px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); border-radius: 6px; cursor: pointer; font: 500 17px var(--font-ui); display: grid; place-items: center; }
+.tools button:hover { background: var(--bg); }
+.readout { position: absolute; left: 10px; bottom: 8px; font: 400 12px var(--font-math); color: var(--muted); background: color-mix(in srgb, var(--canvas) 82%, transparent); padding: 2px 6px; border-radius: 4px; font-variant-numeric: tabular-nums; pointer-events: none; }
+@media (max-width: 720px) {
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: minmax(240px, 48%) minmax(0, 1fr); }
+  .app.kbopen { grid-template-rows: minmax(150px, 30%) minmax(0, 1fr); }
+  .stage { order: -1; }
+  .kb-pad { max-height: 190px; }
+}
+</style>
+
+<div class="app" id="app">
+  <aside class="side">
+    <div class="head">
+      <h1>Plotline</h1>
+      <button class="kbt" id="kbt" type="button" aria-expanded="true" aria-controls="kb">Keyboard</button>
+    </div>
+    <div class="scroll">
+      <div class="rows" id="rows"></div>
+      <button class="add" id="add" type="button">+ Add expression</button>
+      <div class="sliders" id="sliders"></div>
+      <div class="hint">Try <code>y = sin(x)</code>, <code>x^2 + y^2 = 9</code>, <code>y &gt; x^2 - 3</code>, <code>(2, 3)</code> or <code>a = 1</code> for a slider. Sums, products, integrals and derivatives are on the keyboard. Drag to pan, scroll or pinch to zoom.</div>
+    </div>
+    <div class="kb" id="kb">
+      <div class="kb-tabs" id="tabs" role="tablist"></div>
+      <div class="kb-pad" id="pad"></div>
+    </div>
+  </aside>
+  <main class="stage" id="stage">
+    <canvas id="cv" aria-label="Graph"></canvas>
+    <div class="tools">
+      <button id="zin" type="button" aria-label="Zoom in">+</button>
+      <button id="zout" type="button" aria-label="Zoom out">&minus;</button>
+      <button id="home" type="button" aria-label="Reset view" title="Reset view">&#8962;</button>
+    </div>
+    <div class="readout" id="ro">x = 0, y = 0</div>
+  </main>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- math library ---------- */
+  var LG = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059,
+    12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+  function gamma(z) {
+    if (z < 0.5) return Math.PI / (Math.sin(Math.PI * z) * gamma(1 - z));
+    z -= 1;
+    var a = LG[0], t = z + 7.5;
+    for (var i = 1; i < 9; i++) a += LG[i] / (z + i);
+    return Math.sqrt(2 * Math.PI) * Math.pow(t, z + 0.5) * Math.exp(-t) * a;
+  }
+  function isInt(n) { return Math.abs(n - Math.round(n)) < 1e-9; }
+  function fact(n) {
+    if (isInt(n)) {
+      n = Math.round(n);
+      if (n < 0) return NaN;
+      if (n > 170) return Infinity;
+      var r = 1; for (var i = 2; i <= n; i++) r *= i; return r;
+    }
+    return gamma(n + 1);
+  }
+  function gcd(a, b) { a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b)); while (b) { var t = a % b; a = b; b = t; } return a; }
+  var FN = {
+    sin: Math.sin, cos: Math.cos, tan: Math.tan,
+    sec: function (v) { return 1 / Math.cos(v); }, csc: function (v) { return 1 / Math.sin(v); }, cot: function (v) { return 1 / Math.tan(v); },
+    asin: Math.asin, acos: Math.acos, atan: Math.atan, atan2: Math.atan2,
+    sinh: Math.sinh, cosh: Math.cosh, tanh: Math.tanh, asinh: Math.asinh, acosh: Math.acosh, atanh: Math.atanh,
+    sqrt: Math.sqrt, cbrt: Math.cbrt, abs: Math.abs, ln: Math.log, log: Math.log10,
+    logb: function (b, v) { return Math.log(v) / Math.log(b); },
+    exp: Math.exp, floor: Math.floor, ceil: Math.ceil, round: Math.round, sign: Math.sign,
+    min: Math.min, max: Math.max,
+    mod: function (a, b) { return ((a % b) + b) % b; },
+    gcd: gcd, lcm: function (a, b) { var g = gcd(a, b); return g ? Math.abs(Math.round(a) * Math.round(b)) / g : 0; },
+    root: function (n, v) { return (v < 0 && Math.round(n) % 2 !== 0) ? -Math.pow(-v, 1 / n) : Math.pow(v, 1 / n); },
+    gamma: gamma, fact: fact,
+    ncr: function (n, k) { n = Math.round(n); k = Math.round(k); if (k < 0 || k > n) return 0; k = Math.min(k, n - k); var r = 1; for (var i = 1; i <= k; i++) r = r * (n - k + i) / i; return Math.round(r); },
+    npr: function (n, k) { n = Math.round(n); k = Math.round(k); if (k < 0 || k > n) return 0; var r = 1; for (var i = 0; i < k; i++) r *= (n - i); return r; },
+    sum: function (f, a, b) { a = Math.round(a); b = Math.round(b); if (!isFinite(a) || !isFinite(b) || b - a > 100000) return NaN; var s = 0; for (var i = a; i <= b; i++) s += f(i); return s; },
+    prod: function (f, a, b) { a = Math.round(a); b = Math.round(b); if (!isFinite(a) || !isFinite(b) || b - a > 100000) return NaN; var s = 1; for (var i = a; i <= b; i++) s *= f(i); return s; },
+    int: function (f, a, b) { if (!isFinite(a) || !isFinite(b)) return NaN; var n = 60, h = (b - a) / n, s = f(a) + f(b); for (var i = 1; i < n; i++) s += f(a + i * h) * (i % 2 ? 4 : 2); return s * h / 3; },
+    diff: function (f, t) { var h = 1e-5 * Math.max(1, Math.abs(t)); return (f(t + h) - f(t - h)) / (2 * h); }
+  };
+  var BOUND = { sum: 1, prod: 1, int: 1, diff: 1 };
+  var FNAMES = Object.keys(FN).filter(function (n) { return n !== "atan2" && n !== "fact"; }).concat(["fact"])
+    .sort(function (a, b) { return b.length - a.length; });
+  var CONSTS = { pi: Math.PI, tau: 2 * Math.PI, phi: (1 + Math.sqrt(5)) / 2, e: Math.E };
+  var CNAMES = ["tau", "phi", "pi"];
+  var P = {}, M = {};   // slider values and ranges, by letter
+
+  /* ---------- parsing ---------- */
+  function splitIdent(name, t) {
+    while (name.length) {
+      var low = name.toLowerCase();
+      var f = FNAMES.find(function (n) { return low.indexOf(n) === 0; });
+      if (f) { t.push({ k: "fn", v: f }); name = name.slice(f.length); continue; }
+      var cn = CNAMES.find(function (n) { return low.indexOf(n) === 0; });
+      if (cn) { t.push({ k: "const", v: cn }); name = name.slice(cn.length); continue; }
+      if (name[0] === "e") t.push({ k: "const", v: "e" }); else t.push({ k: "var", v: name[0] });
+      name = name.slice(1);
+    }
+  }
+  function tokenize(s) {
+    s = s.replace(/π/g, "pi").replace(/τ/g, "tau").replace(/φ/g, "phi").replace(/[×·]/g, "*")
+      .replace(/÷/g, "/").replace(/−/g, "-").replace(/√/g, "sqrt");
+    var t = [], i = 0, m;
+    while (i < s.length) {
+      var c = s[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if ((m = /^(\d+\.?\d*|\.\d+)/.exec(s.slice(i)))) { t.push({ k: "num", v: parseFloat(m[1]) }); i += m[1].length; continue; }
+      if (/^atan2(?=\()/i.test(s.slice(i))) { t.push({ k: "fn", v: "atan2" }); i += 5; continue; }
+      if ((m = /^[a-zA-Z]+/.exec(s.slice(i)))) { splitIdent(m[0], t); i += m[0].length; continue; }
+      if (c === "[" || c === "{") { t.push({ k: "op", v: "(" }); i++; continue; }
+      if (c === "]" || c === "}") { t.push({ k: "op", v: ")" }); i++; continue; }
+      if ("+-*/^(),|!".indexOf(c) >= 0) { t.push({ k: "op", v: c }); i++; continue; }
+      throw new Error('Unexpected "' + c + '"');
+    }
+    return t;
+  }
+  function build(tokens, bound, ctx) {
+    var p = 0;
+    function peek() { return tokens[p]; }
+    function isOp(v) { var t = peek(); return t && t.k === "op" && t.v === v; }
+    function close() { if (!isOp(")")) throw new Error("Missing )"); p++; }
+    function startsAtom() {
+      var t = peek();
+      return t && (t.k === "num" || t.k === "var" || t.k === "const" || t.k === "fn" || (t.k === "op" && t.v === "("));
+    }
+    function expr() {
+      var a = term();
+      while (isOp("+") || isOp("-")) { var op = tokens[p++].v; var b = term(); a = "(" + a + op + b + ")"; }
+      return a;
+    }
+    function term() {
+      var a = unary();
+      for (;;) {
+        if (isOp("*") || isOp("/")) { var op = tokens[p++].v; var b = unary(); a = "(" + a + op + b + ")"; }
+        else if (startsAtom()) { var c = unary(); a = "(" + a + "*" + c + ")"; }
+        else break;
+      }
+      return a;
+    }
+    function unary() {
+      if (isOp("-")) { p++; return "(-" + unary() + ")"; }
+      if (isOp("+")) { p++; return unary(); }
+      return power();
+    }
+    function power() {
+      var a = atom();
+      while (isOp("!")) { p++; a = "F.fact(" + a + ")"; }
+      if (isOp("^")) { p++; var b = unary(); return "Math.pow(" + a + "," + b + ")"; }
+      return a;
+    }
+    function boundCall(name) {
+      if (!isOp("(")) throw new Error(name + " needs ( )");
+      var depth = 0, end = -1, q;
+      for (q = p; q < tokens.length; q++) {
+        var tk = tokens[q];
+        if (tk.k === "op" && tk.v === "(") depth++;
+        else if (tk.k === "op" && tk.v === ")") { depth--; if (depth === 0) { end = q; break; } }
+      }
+      if (end < 0) throw new Error("Missing )");
+      var inner = tokens.slice(p + 1, end); p = end + 1;
+      var args = [], cur = [], d = 0;
+      inner.forEach(function (tk) {
+        if (tk.k === "op" && tk.v === "(") d++;
+        if (tk.k === "op" && tk.v === ")") d--;
+        if (tk.k === "op" && tk.v === "," && d === 0) { args.push(cur); cur = []; } else cur.push(tk);
+      });
+      args.push(cur);
+      var need = name === "diff" ? 3 : 4;
+      if (args.length !== need) throw new Error(name + " needs " + need + " parts separated by commas");
+      var vt = args[1];
+      if (vt.length !== 1 || vt[0].k !== "var") throw new Error("Second part must be a single letter, like k");
+      var vn = vt[0].v, b2 = {}, key;
+      for (key in bound) b2[key] = true;
+      b2[vn] = true;
+      var body = build(args[0], b2, ctx);
+      var rest = args.slice(2).map(function (a) { return build(a, bound, ctx); });
+      return "F." + name + "(function(b_" + vn + "){return " + body + ";}," + rest.join(",") + ")";
+    }
+    function atom() {
+      var t = tokens[p++];
+      if (!t) throw new Error("Fill in the empty part");
+      if (t.k === "num") return "(" + t.v + ")";
+      if (t.k === "const") return "(" + CONSTS[t.v] + ")";
+      if (t.k === "var") {
+        if (bound[t.v]) return "b_" + t.v;
+        if (t.v === "x") { ctx.ux = true; return "x"; }
+        if (t.v === "y") { ctx.uy = true; return "y"; }
+        ctx.params.add(t.v); return "(P." + t.v + ")";
+      }
+      if (t.k === "fn") {
+        if (BOUND[t.v]) return boundCall(t.v);
+        var args = [];
+        if (isOp("(")) {
+          p++; args.push(expr());
+          while (isOp(",")) { p++; args.push(expr()); }
+          close();
+        } else args.push(power());
+        return "F." + t.v + "(" + args.join(",") + ")";
+      }
+      if (t.k === "op" && t.v === "(") { var a = expr(); close(); return "(" + a + ")"; }
+      if (t.k === "op" && t.v === "|") {
+        var b = expr(); if (!isOp("|")) throw new Error("Missing closing |"); p++; return "Math.abs(" + b + ")";
+      }
+      if (t.k === "op" && (t.v === ")" || t.v === "," || t.v === "|")) throw new Error("Fill in the empty part");
+      throw new Error('Unexpected "' + t.v + '"');
+    }
+    var code = expr();
+    if (p < tokens.length) throw new Error('Unexpected "' + tokens[p].v + '"');
+    return code;
+  }
+  function comp(src) {
+    var ctx = { params: new Set(), ux: false, uy: false };
+    var code = build(tokenize(src), {}, ctx);
+    var raw = new Function("x", "y", "P", "F", "return " + code + ";");
+    return { f: function (x, y) { return raw(x, y, P, FN); }, params: ctx.params, ux: ctx.ux, uy: ctx.uy };
+  }
+  function uni(a, b) { return new Set(Array.from(a).concat(Array.from(b))); }
+  function splitTop(s) {
+    var parts = [], d = 0, cur = "";
+    for (var i = 0; i < s.length; i++) {
+      var c = s[i];
+      if (c === "(" || c === "[" || c === "{") d++;
+      if (c === ")" || c === "]" || c === "}") { d--; if (d < 0) return [s]; }
+      if (c === "," && d === 0) { parts.push(cur); cur = ""; } else cur += c;
+    }
+    parts.push(cur);
+    return parts;
+  }
+  function analyze(text) {
+    text = text.replace(/≤/g, "<=").replace(/≥/g, ">=").trim();
+    if (!text) return { kind: "empty" };
+    try {
+      var m = /<=|>=|<|>|=/.exec(text);
+      if (m) {
+        var op = m[0], L = text.slice(0, m.index).trim(), R = text.slice(m.index + op.length).trim();
+        if (!L || !R) throw new Error("Finish the equation");
+        var a, b;
+        if (op !== "=") {
+          a = comp(L); b = comp(R);
+          return { kind: "ineq", op: op, f: function (x, y) { return a.f(x, y) - b.f(x, y); }, params: uni(a.params, b.params) };
+        }
+        if (L === "y" || R === "y") {
+          var c0 = comp(L === "y" ? R : L);
+          if (!c0.uy) return { kind: "fn", f: c0.f, params: c0.params };
+        }
+        if (/^[a-df-wzA-Z]$/.test(L)) {
+          var cv = comp(R);
+          if (!cv.ux && !cv.uy && cv.params.size === 0) return { kind: "param", name: L, value: cv.f(0, 0) };
+        }
+        a = comp(L); b = comp(R);
+        return { kind: "imp", f: function (x, y) { return a.f(x, y) - b.f(x, y); }, params: uni(a.params, b.params) };
+      }
+      if (/^[(\[{]/.test(text) && /[)\]}]$/.test(text)) {
+        var parts = splitTop(text.slice(1, -1));
+        if (parts.length === 2) {
+          var px = comp(parts[0]), py = comp(parts[1]);
+          if (px.ux || px.uy || py.ux || py.uy) throw new Error("Points can't use x or y");
+          return { kind: "pt", fx: px.f, fy: py.f, params: uni(px.params, py.params) };
+        }
+      }
+      var c = comp(text);
+      if (c.uy) throw new Error('Add an "=", "<" or ">" sign, for example y = ...');
+      return { kind: "fn", f: c.f, params: c.params };
+    } catch (e) {
+      return { kind: "err", msg: e.message };
+    }
+  }
+
+  /* ---------- state ---------- */
+  var S = { rows: [], cx: 0, cy: 0, s: 50 };
+  var uid = 0, colorN = 0;
+  var rowsEl = document.getElementById("rows"), slEl = document.getElementById("sliders");
+  var cv = document.getElementById("cv"), ctx = cv.getContext("2d"), stage = document.getElementById("stage");
+  var ro = document.getElementById("ro");
+  var W = 300, H = 300, DPR = 1, inited = false, raf = 0, grid = null;
+
+  function fmt(v) {
+    if (!isFinite(v)) return String(v);
+    if (Math.abs(v) < 1e-12) return "0";
+    var a = Math.abs(v);
+    if (a >= 1e6 || a < 1e-4) return v.toExponential(2).replace("e+", "e");
+    return String(parseFloat(v.toPrecision(10)));
+  }
+  function save() {
+    try { localStorage.setItem("plotline.v2", JSON.stringify(S.rows.map(function (r) { return { t: r.text, v: r.visible }; }))); } catch (e) {}
+  }
+  function range(v) {
+    var m = Math.max(10, Math.ceil(Math.abs(v) * 2));
+    return { min: -m, max: m, step: (2 * m) / 2000 };
+  }
+  function syncParams(changed) {
+    var defined = {}, used = new Set();
+    S.rows.forEach(function (r) {
+      var q = r.res;
+      if (q.kind === "param") defined[q.name] = q.value;
+      else if (q.params) q.params.forEach(function (n) { used.add(n); });
+    });
+    var names = new Set(Object.keys(defined).concat(Array.from(used)));
+    Object.keys(P).forEach(function (n) { if (!names.has(n)) { delete P[n]; delete M[n]; } });
+    names.forEach(function (n) {
+      if (!(n in P)) { P[n] = n in defined ? defined[n] : 1; M[n] = range(P[n]); }
+      else if (changed && changed.res.kind === "param" && changed.res.name === n && isFinite(defined[n])) {
+        P[n] = defined[n];
+        if (P[n] < M[n].min || P[n] > M[n].max) M[n] = range(P[n]);
+      }
+    });
+    renderSliders();
+  }
+  var slKey = "";
+  function renderSliders() {
+    var names = Object.keys(P).sort();
+    var key = names.map(function (n) { return n + M[n].min + M[n].max; }).join("|");
+    if (key === slKey) {
+      names.forEach(function (n) {
+        var el = document.getElementById("sl-" + n); if (el) { el.value = P[n]; document.getElementById("slo-" + n).textContent = fmt(P[n]); }
+      });
+      return;
+    }
+    slKey = key;
+    slEl.textContent = "";
+    if (!names.length) return;
+    var h = document.createElement("h2"); h.textContent = "Sliders"; slEl.appendChild(h);
+    names.forEach(function (n) {
+      var d = document.createElement("div"); d.className = "sl";
+      var b = document.createElement("b"); b.textContent = n;
+      var inp = document.createElement("input"); inp.type = "range"; inp.id = "sl-" + n;
+      inp.min = M[n].min; inp.max = M[n].max; inp.step = M[n].step; inp.value = P[n];
+      inp.setAttribute("aria-label", "Value of " + n);
+      var o = document.createElement("output"); o.id = "slo-" + n; o.textContent = fmt(P[n]);
+      inp.addEventListener("input", function () {
+        P[n] = parseFloat(inp.value); o.textContent = fmt(P[n]);
+        S.rows.forEach(function (r) {
+          if (r.res.kind === "param" && r.res.name === n) {
+            r.text = n + " = " + fmt(P[n]); r.inp.value = r.text; r.res.value = P[n];
+          }
+        });
+        redraw();
+      });
+      inp.addEventListener("change", save);
+      d.appendChild(b); d.appendChild(inp); d.appendChild(o); slEl.appendChild(d);
+    });
+  }
+
+  /* ---------- expression list ---------- */
+  var lastInp = null, kbOpen = false;
+  var coarse = false;
+  try { coarse = window.matchMedia("(pointer: coarse)").matches; } catch (e) {}
+  function makeRow(text, visible) {
+    var r = { id: ++uid, text: text || "", visible: visible !== false, ci: colorN++ % 6, res: { kind: "empty" } };
+    r.res = analyze(r.text);
+    return r;
+  }
+  function buildRow(r) {
+    var el = document.createElement("div"); el.className = "row"; el.style.setProperty("--c", "var(--c" + r.ci + ")");
+    var dot = document.createElement("button"); dot.type = "button"; dot.className = "dot";
+    dot.setAttribute("aria-pressed", String(r.visible)); dot.setAttribute("aria-label", "Show or hide expression");
+    dot.addEventListener("click", function () {
+      r.visible = !r.visible; dot.setAttribute("aria-pressed", String(r.visible)); save(); redraw();
+    });
+    var inp = document.createElement("input"); inp.type = "text"; inp.id = "ex-" + r.id; inp.value = r.text;
+    inp.placeholder = "Type an expression"; inp.autocomplete = "off"; inp.spellcheck = false;
+    inp.setAttribute("autocapitalize", "off"); inp.setAttribute("aria-label", "Expression");
+    inp.setAttribute("inputmode", kbOpen && coarse ? "none" : "text");
+    var x = document.createElement("button"); x.type = "button"; x.className = "x"; x.textContent = "×";
+    x.setAttribute("aria-label", "Delete expression");
+    var err = document.createElement("div"); err.className = "err";
+    r.el = el; r.inp = inp; r.err = err;
+    inp.addEventListener("focus", function () { lastInp = inp; });
+    inp.addEventListener("input", function () {
+      r.text = inp.value; r.res = analyze(r.text); err.textContent = r.res.kind === "err" ? r.res.msg : "";
+      syncParams(r); save(); redraw();
+    });
+    inp.addEventListener("keydown", function (e) {
+      var i = S.rows.indexOf(r);
+      if (e.key === "Enter") { e.preventDefault(); insertRow(i + 1); }
+      else if (e.key === "Backspace" && r.text === "" && S.rows.length > 1) { e.preventDefault(); removeRow(r, true); }
+      else if (e.key === "ArrowDown" && S.rows[i + 1]) { S.rows[i + 1].inp.focus(); }
+      else if (e.key === "ArrowUp" && S.rows[i - 1]) { S.rows[i - 1].inp.focus(); }
+    });
+    x.addEventListener("click", function () { removeRow(r, false); });
+    err.textContent = r.res.kind === "err" ? r.res.msg : "";
+    el.appendChild(dot); el.appendChild(inp); el.appendChild(x); el.appendChild(err);
+    return el;
+  }
+  function renderRows(focusRow) {
+    rowsEl.textContent = "";
+    S.rows.forEach(function (r) { rowsEl.appendChild(buildRow(r)); });
+    if (focusRow) focusRow.inp.focus();
+  }
+  function insertRow(at) {
+    var r = makeRow("", true); S.rows.splice(at, 0, r); renderRows(r); save();
+  }
+  function removeRow(r, focusPrev) {
+    var i = S.rows.indexOf(r); S.rows.splice(i, 1);
+    if (!S.rows.length) S.rows.push(makeRow("", true));
+    renderRows(focusPrev ? S.rows[Math.max(0, i - 1)] : null);
+    syncParams(null); save(); redraw();
+  }
+  document.getElementById("add").addEventListener("click", function () { insertRow(S.rows.length); });
+
+  /* ---------- math keyboard ---------- */
+  // key = [label, text to insert, caret offset inside the inserted text, style]
+  var TABS = [
+    { id: "basic", label: "123", keys: [
+      ["7", "7"], ["8", "8"], ["9", "9"], ["÷", "/", null, "op"], ["x", "x", null, "op"], ["y", "y", null, "op"],
+      ["4", "4"], ["5", "5"], ["6", "6"], ["×", "*", null, "op"], ["(", "("], [")", ")"],
+      ["1", "1"], ["2", "2"], ["3", "3"], ["−", "-", null, "op"], ["[", "["], ["]", "]"],
+      ["0", "0"], [".", "."], [",", ","], ["+", "+", null, "op"], ["{", "{"], ["}", "}"],
+      ["x²", "^2", null, "op"], ["xⁿ", "^()", 2, "op"], ["√", "sqrt()", 5, "op"], ["|a|", "||", 1, "op"], ["π", "pi", null, "op"], ["e", "e", null, "op"],
+      ["←", "@left", null, "act"], ["→", "@right", null, "act"], ["⌫", "@back", null, "act"], ["AC", "@clear", null, "act"], ["↵", "@enter", null, "act"], ["a⁄b", "()/()", 1, "op"]
+    ] },
+    { id: "func", label: "f(x)", keys: [
+      ["sin", "sin()", 4], ["cos", "cos()", 4], ["tan", "tan()", 4], ["sec", "sec()", 4], ["csc", "csc()", 4], ["cot", "cot()", 4],
+      ["sin⁻¹", "asin()", 5], ["cos⁻¹", "acos()", 5], ["tan⁻¹", "atan()", 5], ["sinh", "sinh()", 5], ["cosh", "cosh()", 5], ["tanh", "tanh()", 5],
+      ["sinh⁻¹", "asinh()", 6], ["cosh⁻¹", "acosh()", 6], ["tanh⁻¹", "atanh()", 6], ["ln", "ln()", 3], ["log", "log()", 4], ["logₐ", "logb(,)", 5],
+      ["eˣ", "e^()", 3], ["10ˣ", "10^()", 4], ["√", "sqrt()", 5], ["∛", "cbrt()", 5], ["ⁿ√", "root(,)", 5], ["|x|", "abs()", 4],
+      ["⌊x⌋", "floor()", 6], ["⌈x⌉", "ceil()", 5], ["round", "round()", 6], ["sign", "sign()", 5], ["min", "min(,)", 4], ["max", "max(,)", 4],
+      ["mod", "mod(,)", 4], ["gcd", "gcd(,)", 4], ["lcm", "lcm(,)", 4], ["n!", "!", null], ["nCr", "ncr(,)", 4], ["nPr", "npr(,)", 4],
+      ["Γ", "gamma()", 6], ["atan2", "atan2(,)", 6]
+    ] },
+    { id: "sym", label: "∑ ∫", keys: [
+      ["∑", "sum(k^2, k, 1, 10)", 4, "op"], ["∏", "prod(k, k, 1, 5)", 5, "op"], ["∫", "int(t^2, t, 0, x)", 4, "op"], ["d/dx", "diff(t^2, t, x)", 5, "op"], ["=", "="], ["<", "<"],
+      [">", ">"], ["≤", "<="], ["≥", ">="], ["π", "pi", null, "op"], ["τ", "tau", null, "op"], ["φ", "phi", null, "op"],
+      ["x²", "^2"], ["x³", "^3"], ["x⁻¹", "^(-1)"], ["eˣ", "e^()", 3], ["10ˣ", "10^()", 4], ["^", "^"],
+      ["(", "("], [")", ")"], ["[", "["], ["]", "]"], ["{", "{"], ["}", "}"],
+      ["|", "|"], ["!", "!"], [",", ","], ["÷", "/"], ["×", "*"], ["−", "-"]
+    ] },
+    { id: "abc", label: "abc", keys: null }
+  ];
+  var tabId = "basic", upper = false;
+  var kb = document.getElementById("kb"), tabsEl = document.getElementById("tabs"), pad = document.getElementById("pad");
+  var kbt = document.getElementById("kbt"), appEl = document.getElementById("app");
+
+  function letterKeys() {
+    var ks = [], i, c;
+    for (i = 0; i < 26; i++) {
+      c = String.fromCharCode((upper ? 65 : 97) + i);
+      ks.push([c, c, null, "op"]);
+    }
+    ks.push(["⇧", "@shift", null, upper ? "on" : "act"], ["␣", " ", null], ["←", "@left", null, "act"],
+      ["→", "@right", null, "act"], ["⌫", "@back", null, "act"], ["↵", "@enter", null, "act"]);
+    return ks;
+  }
+  function renderTabs() {
+    tabsEl.textContent = "";
+    TABS.forEach(function (t) {
+      var b = document.createElement("button"); b.type = "button"; b.textContent = t.label;
+      b.setAttribute("role", "tab"); b.setAttribute("aria-selected", String(t.id === tabId));
+      b.addEventListener("click", function () { tabId = t.id; renderTabs(); renderPad(); });
+      tabsEl.appendChild(b);
+    });
+  }
+  function renderPad() {
+    pad.textContent = "";
+    var tab = TABS.find(function (t) { return t.id === tabId; });
+    var keys = tab.keys || letterKeys();
+    keys.forEach(function (k) {
+      var b = document.createElement("button"); b.type = "button"; b.className = "k" + (k[3] ? " " + k[3] : "");
+      b.textContent = k[0]; b.setAttribute("aria-label", k[0] === "␣" ? "Space" : k[0]);
+      b.addEventListener("click", function () { press(k); });
+      pad.appendChild(b);
+    });
+  }
+  function activeInput() {
+    if (lastInp && document.body.contains(lastInp)) return lastInp;
+    var r = S.rows[S.rows.length - 1]; return r ? r.inp : null;
+  }
+  function fire(inp) { inp.dispatchEvent(new Event("input", { bubbles: true })); }
+  function press(k) {
+    var ins = k[1], inp = activeInput();
+    if (ins === "@shift") { upper = !upper; renderPad(); return; }
+    if (!inp) return;
+    inp.focus();
+    var s = inp.selectionStart, e = inp.selectionEnd, pos;
+    if (ins === "@left") { pos = Math.max(0, s - 1); inp.setSelectionRange(pos, pos); return; }
+    if (ins === "@right") { pos = Math.min(inp.value.length, e + 1); inp.setSelectionRange(pos, pos); return; }
+    if (ins === "@clear") { inp.value = ""; fire(inp); return; }
+    if (ins === "@enter") {
+      var row = S.rows.find(function (r) { return r.inp === inp; });
+      insertRow((row ? S.rows.indexOf(row) : S.rows.length - 1) + 1); return;
+    }
+    if (ins === "@back") {
+      if (s === e && s > 0) inp.setRangeText("", s - 1, s, "end"); else inp.setRangeText("", s, e, "end");
+      fire(inp); return;
+    }
+    inp.setRangeText(ins, s, e, "end");
+    pos = s + (k[2] == null ? ins.length : k[2]);
+    inp.setSelectionRange(pos, pos);
+    fire(inp);
+  }
+  function setKb(open) {
+    kbOpen = open; kb.hidden = !open; appEl.classList.toggle("kbopen", open);
+    kbt.setAttribute("aria-expanded", String(open));
+    S.rows.forEach(function (r) { r.inp.setAttribute("inputmode", open && coarse ? "none" : "text"); });
+  }
+  // keep the text cursor in the expression box while keys are pressed
+  kb.addEventListener("mousedown", function (e) { e.preventDefault(); });
+  kbt.addEventListener("click", function () { setKb(!kbOpen); });
+
+  /* ---------- drawing ---------- */
+  function niceStep(raw) {
+    var pow = Math.pow(10, Math.floor(Math.log10(raw))), m = raw / pow;
+    var n = m <= 1 ? 1 : m <= 2 ? 2 : m <= 5 ? 5 : 10;
+    return { step: n * pow, sub: n === 2 ? 2 : 5 };
+  }
+  function drawGrid(c) {
+    var ns = niceStep(80 / S.s), step = ns.step, minor = step / ns.sub;
+    var x0 = S.cx - W / 2 / S.s, x1 = S.cx + W / 2 / S.s, y0 = S.cy - H / 2 / S.s, y1 = S.cy + H / 2 / S.s;
+    function sx(v) { return Math.round(W / 2 + (v - S.cx) * S.s) + 0.5; }
+    function sy(v) { return Math.round(H / 2 - (v - S.cy) * S.s) + 0.5; }
+    var i, v;
+    ctx.lineWidth = 1; ctx.strokeStyle = c.minor; ctx.beginPath();
+    for (i = Math.ceil(x0 / minor); i * minor <= x1; i++) { v = i * minor; ctx.moveTo(sx(v), 0); ctx.lineTo(sx(v), H); }
+    for (i = Math.ceil(y0 / minor); i * minor <= y1; i++) { v = i * minor; ctx.moveTo(0, sy(v)); ctx.lineTo(W, sy(v)); }
+    ctx.stroke();
+    ctx.strokeStyle = c.major; ctx.beginPath();
+    for (i = Math.ceil(x0 / step); i * step <= x1; i++) { v = i * step; ctx.moveTo(sx(v), 0); ctx.lineTo(sx(v), H); }
+    for (i = Math.ceil(y0 / step); i * step <= y1; i++) { v = i * step; ctx.moveTo(0, sy(v)); ctx.lineTo(W, sy(v)); }
+    ctx.stroke();
+    ctx.strokeStyle = c.axis; ctx.lineWidth = 1.5; ctx.beginPath();
+    if (x0 <= 0 && x1 >= 0) { ctx.moveTo(sx(0), 0); ctx.lineTo(sx(0), H); }
+    if (y0 <= 0 && y1 >= 0) { ctx.moveTo(0, sy(0)); ctx.lineTo(W, sy(0)); }
+    ctx.stroke();
+    ctx.font = '12px "IBM Plex Mono", ui-monospace, monospace'; ctx.fillStyle = c.axis;
+    ctx.lineWidth = 3; ctx.strokeStyle = c.canvas; ctx.lineJoin = "round";
+    var ay = Math.min(Math.max(sy(0), 6), H - 18), ax = Math.min(Math.max(sx(0), 8), W - 8);
+    ctx.textAlign = "center"; ctx.textBaseline = "top";
+    for (i = Math.ceil(x0 / step); i * step <= x1; i++) {
+      if (i === 0) continue; v = i * step; var tx = sx(v);
+      ctx.strokeText(fmt(v), tx, ay + 4); ctx.fillText(fmt(v), tx, ay + 4);
+    }
+    var left = sx(0) < 30;
+    ctx.textAlign = left ? "left" : "right"; ctx.textBaseline = "middle";
+    var lx = left ? ax + 6 : ax - 6;
+    for (i = Math.ceil(y0 / step); i * step <= y1; i++) {
+      if (i === 0) continue; v = i * step; var ty = sy(v);
+      ctx.strokeText(fmt(v), lx, ty); ctx.fillText(fmt(v), lx, ty);
+    }
+    if (x0 <= 0 && x1 >= 0 && y0 <= 0 && y1 >= 0) {
+      ctx.textAlign = "right"; ctx.textBaseline = "top";
+      ctx.strokeText("0", sx(0) - 5, sy(0) + 4); ctx.fillText("0", sx(0) - 5, sy(0) + 4);
+    }
+  }
+  function plotFn(r) {
+    var pen = false, py = 0;
+    ctx.beginPath();
+    for (var px = 0; px <= W; px++) {
+      var x = S.cx + (px - W / 2) / S.s, y = r.f(x, 0);
+      if (typeof y !== "number" || !isFinite(y)) { pen = false; continue; }
+      var sy = H / 2 - (y - S.cy) * S.s;
+      if (Math.abs(sy) > 1e6) { pen = false; continue; }
+      if (pen && Math.abs(sy - py) > H * 3) pen = false;
+      if (pen) ctx.lineTo(px, sy); else ctx.moveTo(px, sy);
+      pen = true; py = sy;
+    }
+    ctx.stroke();
+  }
+  var SEG = [null, "LB", "BR", "LR", "TR", "TL,BR", "TB", "TL", "TL", "TB", "TR,LB", "TR", "LR", "BR", "LB", null];
+  function fillGrid(r, cell) {
+    var nx = Math.ceil(W / cell) + 2, ny = Math.ceil(H / cell) + 2, i, j;
+    if (!grid || grid.length < nx * ny) grid = new Float64Array(nx * ny);
+    for (j = 0; j < ny; j++) for (i = 0; i < nx; i++)
+      grid[j * nx + i] = r.f(S.cx + (i * cell - W / 2) / S.s, S.cy - (j * cell - H / 2) / S.s);
+    return { nx: nx, ny: ny };
+  }
+  function march(nx, ny, cell) {
+    function t(a, b) { return a / (a - b); }
+    for (var j = 0; j < ny - 1; j++) for (var i = 0; i < nx - 1; i++) {
+      var v0 = grid[j * nx + i], v1 = grid[j * nx + i + 1], v2 = grid[(j + 1) * nx + i + 1], v3 = grid[(j + 1) * nx + i];
+      if (!(isFinite(v0) && isFinite(v1) && isFinite(v2) && isFinite(v3))) continue;
+      var idx = (v0 > 0 ? 8 : 0) | (v1 > 0 ? 4 : 0) | (v2 > 0 ? 2 : 0) | (v3 > 0 ? 1 : 0);
+      var spec = SEG[idx]; if (!spec) continue;
+      var x0 = i * cell, y0 = j * cell;
+      var pts = {
+        T: [x0 + cell * t(v0, v1), y0], R: [x0 + cell, y0 + cell * t(v1, v2)],
+        B: [x0 + cell * t(v3, v2), y0 + cell], L: [x0, y0 + cell * t(v0, v3)]
+      };
+      var segs = spec.split(",");
+      for (var k = 0; k < segs.length; k++) {
+        var a = pts[segs[k][0]], b = pts[segs[k][1]];
+        ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]);
+      }
+    }
+  }
+  function plotImp(r) {
+    var g = fillGrid(r, 5);
+    ctx.beginPath(); march(g.nx, g.ny, 5); ctx.stroke();
+  }
+  function plotIneq(r, color) {
+    var cell = 5, g = fillGrid(r, cell), nx = g.nx, ny = g.ny, op = r.op, i, j;
+    function ok(v) {
+      if (!isFinite(v)) return false;
+      return op === "<" ? v < 0 : op === "<=" ? v <= 0 : op === ">" ? v > 0 : v >= 0;
+    }
+    ctx.globalAlpha = 0.17; ctx.fillStyle = color;
+    for (j = 0; j < ny; j++) {
+      var run = -1;
+      for (i = 0; i <= nx; i++) {
+        var on = i < nx && ok(grid[j * nx + i]);
+        if (on && run < 0) run = i;
+        else if (!on && run >= 0) { ctx.fillRect(run * cell - cell / 2, j * cell - cell / 2, (i - run) * cell, cell); run = -1; }
+      }
+    }
+    ctx.globalAlpha = 1;
+    ctx.setLineDash(op.length === 1 ? [7, 5] : []);
+    ctx.beginPath(); march(nx, ny, cell); ctx.stroke();
+    ctx.setLineDash([]);
+  }
+  function plotPt(r, color, c) {
+    var x = r.fx(0, 0), y = r.fy(0, 0);
+    if (!isFinite(x) || !isFinite(y)) return;
+    var sx = W / 2 + (x - S.cx) * S.s, sy = H / 2 - (y - S.cy) * S.s;
+    ctx.beginPath(); ctx.arc(sx, sy, 5.5, 0, Math.PI * 2); ctx.fillStyle = color; ctx.fill();
+    ctx.lineWidth = 2; ctx.strokeStyle = c.canvas; ctx.stroke();
+    var label = "(" + fmt(x) + ", " + fmt(y) + ")";
+    ctx.font = '12px "IBM Plex Mono", ui-monospace, monospace'; ctx.textAlign = "left"; ctx.textBaseline = "bottom";
+    ctx.lineWidth = 3; ctx.strokeStyle = c.canvas; ctx.fillStyle = c.axis;
+    ctx.strokeText(label, sx + 9, sy - 6); ctx.fillText(label, sx + 9, sy - 6);
+  }
+  function draw() {
+    var cs = getComputedStyle(document.documentElement);
+    function g(n) { return cs.getPropertyValue(n).trim(); }
+    var c = { canvas: g("--canvas"), minor: g("--grid-minor"), major: g("--grid-major"), axis: g("--axis") };
+    ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+    ctx.fillStyle = c.canvas; ctx.fillRect(0, 0, W, H);
+    drawGrid(c);
+    ctx.lineJoin = "round"; ctx.lineCap = "round";
+    S.rows.forEach(function (r) {
+      if (!r.visible) return;
+      var k = r.res.kind; if (k !== "fn" && k !== "imp" && k !== "pt" && k !== "ineq") return;
+      var color = g("--c" + r.ci);
+      ctx.strokeStyle = color; ctx.lineWidth = 2.4;
+      if (k === "fn") plotFn(r.res); else if (k === "imp") plotImp(r.res); else if (k === "ineq") plotIneq(r.res, color); else plotPt(r.res, color, c);
+    });
+  }
+  function redraw() { if (!raf) raf = requestAnimationFrame(function () { raf = 0; draw(); }); }
+
+  /* ---------- view controls ---------- */
+  function zoomAt(px, py, f) {
+    var wx = S.cx + (px - W / 2) / S.s, wy = S.cy - (py - H / 2) / S.s;
+    S.s = Math.min(1e5, Math.max(1e-3, S.s * f));
+    S.cx = wx - (px - W / 2) / S.s; S.cy = wy + (py - H / 2) / S.s;
+  }
+  function home() { S.cx = 0; S.cy = 0; S.s = Math.min(W, H) / 14; redraw(); }
+  var ptrs = new Map(), lastDist = 0;
+  cv.addEventListener("pointerdown", function (e) {
+    cv.setPointerCapture(e.pointerId); ptrs.set(e.pointerId, { x: e.offsetX, y: e.offsetY });
+    if (ptrs.size === 2) { var a = Array.from(ptrs.values()); lastDist = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y); }
+  });
+  cv.addEventListener("pointermove", function (e) {
+    var wx = S.cx + (e.offsetX - W / 2) / S.s, wy = S.cy - (e.offsetY - H / 2) / S.s;
+    var dec = Math.min(8, Math.max(0, Math.ceil(Math.log10(S.s))));
+    ro.textContent = "x = " + wx.toFixed(dec) + ", y = " + wy.toFixed(dec);
+    var p = ptrs.get(e.pointerId); if (!p) return;
+    if (ptrs.size === 1) { S.cx -= (e.offsetX - p.x) / S.s; S.cy += (e.offsetY - p.y) / S.s; }
+    p.x = e.offsetX; p.y = e.offsetY;
+    if (ptrs.size === 2) {
+      var a = Array.from(ptrs.values()), d = Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+      if (lastDist) zoomAt((a[0].x + a[1].x) / 2, (a[0].y + a[1].y) / 2, d / lastDist);
+      lastDist = d;
+    }
+    redraw();
+  });
+  function up(e) { ptrs.delete(e.pointerId); lastDist = 0; }
+  cv.addEventListener("pointerup", up); cv.addEventListener("pointercancel", up);
+  cv.addEventListener("wheel", function (e) {
+    e.preventDefault();
+    var k = e.deltaMode === 1 ? 30 : 1;
+    zoomAt(e.offsetX, e.offsetY, Math.exp(-e.deltaY * k * 0.0015)); redraw();
+  }, { passive: false });
+  document.getElementById("zin").addEventListener("click", function () { zoomAt(W / 2, H / 2, 1.4); redraw(); });
+  document.getElementById("zout").addEventListener("click", function () { zoomAt(W / 2, H / 2, 1 / 1.4); redraw(); });
+  document.getElementById("home").addEventListener("click", home);
+
+  function resize() {
+    var b = stage.getBoundingClientRect();
+    W = Math.max(50, b.width); H = Math.max(50, b.height); DPR = window.devicePixelRatio || 1;
+    cv.width = Math.round(W * DPR); cv.height = Math.round(H * DPR);
+    if (!inited) { S.s = Math.min(W, H) / 14; inited = true; }
+    draw();
+  }
+  new ResizeObserver(resize).observe(stage);
+  try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", redraw); } catch (e) {}
+  new MutationObserver(redraw).observe(document.documentElement, { attributes: true, attributeFilter: ["data-theme"] });
+
+  /* ---------- start ---------- */
+  var start = null;
+  try { start = JSON.parse(localStorage.getItem("plotline.v2") || "null"); } catch (e) {}
+  if (!Array.isArray(start) || !start.length) {
+    start = [{ t: "a = 1.5" }, { t: "b = 2" }, { t: "y = a sin(b x)" }, { t: "y = x^2 / 4 - 3" }, { t: "x^2 + y^2 = 9" }, { t: "y > sum(k, k, 1, 3) - 4" }, { t: "(1.5, 2)" }];
+  }
+  start.forEach(function (o) { S.rows.push(makeRow(String(o.t || ""), o.v !== false)); });
+  renderTabs(); renderPad();
+  var wide = true;
+  try { wide = window.matchMedia("(min-width: 721px)").matches; } catch (e) {}
+  setKb(wide);
+  renderRows(null);
+  syncParams(null);
+  resize();
+})();
+</script>
+
+<script>
+/* Theme sync: the portfolio page tells this calculator whether it is light or dark. */
+addEventListener('message', function (e) {
+  if (e.source !== window.parent) return;
+  var d = e.data;
+  if (d && d.type === 'plotline-theme' && (d.theme === 'light' || d.theme === 'dark'))
+    document.documentElement.setAttribute('data-theme', d.theme);
+});
+</script>
+</body></html>
