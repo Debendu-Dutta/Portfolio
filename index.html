@@ -24,12 +24,10 @@
   <a href="#home" class="logo">D<span>∂</span></a>
   <button class="burger" id="burger" aria-label="Menu">☰</button>
   <nav id="menu">
-    <a href="#fourier-lab">Fourier</a>
     <a href="#about">About</a>
     <a href="#journey">Journey</a>
     <a href="#blog">Blog</a>
-    <a href="#graph">2D Graph</a>
-    <a href="#graph3d">3D Graph</a>
+    <a href="#graph">Graph</a>
     <a href="#library">Library</a>
     <a href="#gallery">Gallery</a>
     <a href="#contact">Contact</a>
@@ -54,25 +52,9 @@
   <div class="scroll-hint">scroll ↓</div>
 </section>
 
-<!-- FOURIER LAB -->
-<section id="fourier-lab" class="section graph-section">
-  <h2 class="title reveal"><span>01</span> Fourier Series</h2>
-  <p class="lead reveal">Build a square wave from odd sine harmonics. Slide the number of terms up and watch rotating vectors converge on the ideal wave, with Gibbs overshoot included.</p>
-  <div class="graph-wrap fourier-wrap reveal" id="fourierWrap">
-    <div class="graph-bar">
-      <span>Square wave · epicycles</span>
-      <div>
-        <button type="button" data-full="fourierWrap" data-url="fourier.html">Full screen</button>
-        <a href="fourier.html" target="_blank" rel="noopener">Open in new tab ↗</a>
-      </div>
-    </div>
-    <iframe class="embed" src="fourier.html" title="Fourier series: square wave" loading="lazy" allowfullscreen></iframe>
-  </div>
-</section>
-
 <!-- ABOUT -->
 <section id="about" class="section">
-  <h2 class="title reveal"><span>02</span> About</h2>
+  <h2 class="title reveal"><span>01</span> About</h2>
   <div class="about-grid">
     <div class="reveal portrait">
       <img id="photo" alt="Debendu Dutta">
@@ -93,7 +75,7 @@
 
 <!-- JOURNEY -->
 <section id="journey" class="section">
-  <h2 class="title reveal"><span>03</span> Journey</h2>
+  <h2 class="title reveal"><span>02</span> Journey</h2>
   <div class="two-col">
     <div>
       <h3 class="reveal">Education</h3>
@@ -115,7 +97,7 @@
 
 <!-- BLOG -->
 <section id="blog" class="section">
-  <h2 class="title reveal"><span>04</span> Blog</h2>
+  <h2 class="title reveal"><span>03</span> Blog</h2>
   <div class="blog-tools reveal">
     <input id="search" type="search" placeholder="Search posts…" aria-label="Search posts">
     <div class="chips" id="tagFilter"></div>
@@ -125,52 +107,36 @@
 
 <!-- GRAPHING CALCULATOR -->
 <section id="graph" class="section graph-section">
-  <h2 class="title reveal"><span>05</span> 2D Graphing Calculator</h2>
+  <h2 class="title reveal"><span>04</span> Graphing Calculator</h2>
   <p class="lead reveal">Plot functions, equations, inequalities and points, add sliders, and explore. Drag to pan, scroll or pinch to zoom.</p>
   <div class="graph-wrap reveal" id="graphWrap">
     <div class="graph-bar">
       <span>Plotline</span>
       <div>
-        <button type="button" data-full="graphWrap" data-url="plotline.html">Full screen</button>
+        <button type="button" id="graphFull">Full screen</button>
         <a href="plotline.html" target="_blank" rel="noopener">Open in new tab ↗</a>
       </div>
     </div>
-    <iframe class="embed" src="plotline.html" title="Plotline — 2D graphing calculator" loading="lazy" allowfullscreen></iframe>
-  </div>
-</section>
-
-<!-- 3D GRAPHING CALCULATOR -->
-<section id="graph3d" class="section graph-section">
-  <h2 class="title reveal"><span>06</span> 3D Graphing Calculator</h2>
-  <p class="lead reveal">Plot surfaces z = f(x, y), parametric curves and points in three dimensions. Drag to rotate, scroll or pinch to zoom.</p>
-  <div class="graph-wrap reveal" id="graph3dWrap">
-    <div class="graph-bar">
-      <span>Plotline 3D</span>
-      <div>
-        <button type="button" data-full="graph3dWrap" data-url="plotline3d.html">Full screen</button>
-        <a href="plotline3d.html" target="_blank" rel="noopener">Open in new tab ↗</a>
-      </div>
-    </div>
-    <iframe class="embed" src="plotline3d.html" title="Plotline 3D — 3D graphing calculator" loading="lazy" allowfullscreen></iframe>
+    <iframe id="graphFrame" src="plotline.html" title="Plotline — 2D graphing calculator" loading="lazy" allowfullscreen></iframe>
   </div>
 </section>
 
 <!-- LIBRARY -->
 <section id="library" class="section">
-  <h2 class="title reveal"><span>07</span> Library</h2>
+  <h2 class="title reveal"><span>05</span> Library</h2>
   <p class="lead reveal">Notes, slides and papers — open or download.</p>
   <div class="pdfs" id="pdfs"></div>
 </section>
 
 <!-- GALLERY -->
 <section id="gallery" class="section">
-  <h2 class="title reveal"><span>08</span> Gallery</h2>
+  <h2 class="title reveal"><span>06</span> Gallery</h2>
   <div class="gallery" id="galleryGrid"></div>
 </section>
 
 <!-- CONTACT -->
 <section id="contact" class="section contact">
-  <h2 class="title reveal"><span>09</span> Let's talk</h2>
+  <h2 class="title reveal"><span>07</span> Let's talk</h2>
   <p class="lead reveal">If you care about deep ideas and original thinking, I'd love to hear from you.</p>
   <div class="links reveal" id="links"></div>
 </section>

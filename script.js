@@ -88,30 +88,18 @@
   document.addEventListener('mouseover', e => cur.classList.toggle('big', !!e.target.closest('a,button,.post,figure,.chips span')));
 
 
-  /* Embedded labs (Fourier, 2D and 3D calculators): theme sync, full screen, cursor fix */
-  const frames = [...document.querySelectorAll('iframe.embed')];
+  /* Graphing calculator (iframe): keep its theme in sync, full screen, cursor fix */
+  const gFrame = $('#graphFrame'), gWrap = $('#graphWrap');
   function sendGraphTheme() {
-    const theme = root.classList.contains('light') ? 'light' : 'dark';
-    frames.forEach(f => { try { f.contentWindow.postMessage({ type: 'plotline-theme', theme }, '*'); } catch (e) { } });
+    try { gFrame.contentWindow.postMessage({ type: 'plotline-theme', theme: root.classList.contains('light') ? 'light' : 'dark' }, '*'); } catch (e) { }
   }
-  frames.forEach(f => {
-    f.addEventListener('load', sendGraphTheme);
-    f.addEventListener('mouseenter', () => cur.classList.add('hide'));
-    f.addEventListener('mouseleave', () => cur.classList.remove('hide'));
-  });
-  document.querySelectorAll('[data-full]').forEach(b => b.onclick = () => {
-    const wrap = document.getElementById(b.dataset.full);
-    const go = wrap.requestFullscreen ? wrap.requestFullscreen() : Promise.reject();
-    Promise.resolve(go).catch(() => window.open(b.dataset.url, '_blank', 'noopener'));
-  });
-
-  /* Highlight the nav link of the section in view */
-  const navLinks = [...document.querySelectorAll('#menu a')];
-  const spy = new IntersectionObserver(es => es.forEach(e => {
-    if (!e.isIntersecting) return;
-    navLinks.forEach(a => a.classList.toggle('active', a.getAttribute('href') === '#' + e.target.id));
-  }), { rootMargin: '-45% 0px -50% 0px' });
-  document.querySelectorAll('main section[id]').forEach(sec => spy.observe(sec));
+  gFrame.addEventListener('load', sendGraphTheme);
+  $('#graphFull').onclick = () => {
+    const go = gWrap.requestFullscreen ? gWrap.requestFullscreen() : Promise.reject();
+    Promise.resolve(go).catch(() => window.open('plotline.html', '_blank', 'noopener'));
+  };
+  gFrame.addEventListener('mouseenter', () => cur.classList.add('hide'));
+  gFrame.addEventListener('mouseleave', () => cur.classList.remove('hide'));
 
   function tilt(c) {
     c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; c.style.transform = `perspective(700px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateY(-4px)`; });
