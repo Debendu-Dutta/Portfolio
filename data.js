@@ -115,17 +115,17 @@ window.SITE = {
   /* ---------------- PDF LIBRARY ----------------
      1) Copy the PDF into the  pdfs/  folder.  2) Add a line below.          */
   pdfs: [
-    { title: "Sample: Cantor set picture", desc: "Placeholder PDF — replace with your own notes, slides or papers.", file: "pdfs/sample-notes.pdf", tag: "sample" }
+    { title: "Sample: Cantor set picture", desc: "Placeholder PDF — replace with your own notes, slides or papers.", file: "sample-notes.pdf", tag: "sample" }
     // { title: "Lebesgue Outer Measure — Beamer slides", desc: "Lecture slides prepared at IIT Patna.", file: "pdfs/lebesgue-outer-measure.pdf", tag: "slides" },
   ],
 
   /* ---------------- GALLERY ----------------
      Drop your photos in assets/ (or a new folder) and add them here.        */
   gallery: [
-    { src: "assets/mandelbrot.jpg", caption: "Mandelbrot set — complexity from z² + c" },
-    { src: "assets/cantor.jpg", caption: "Cantor set — the first 8 stages" },
-    { src: "assets/torus.jpg", caption: "A torus — the shape of topology" },
-    { src: "assets/complex.jpg", caption: "Domain colouring of a rational function" },
-    { src: "assets/lissajous.jpg", caption: "Lissajous curves" }
+    { src: "mandelbrot.jpg", caption: "Mandelbrot set — complexity from z² + c" },
+    { src: "cantor.jpg", caption: "Cantor set — the first 8 stages" },
+    { src: "torus.jpg", caption: "A torus — the shape of topology" },
+    { src: "complex.jpg", caption: "Domain colouring of a rational function" },
+    { src: "lissajous.jpg", caption: "Lissajous curves" }
   ]
 };
