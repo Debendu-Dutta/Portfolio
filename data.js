@@ -19,8 +19,8 @@ window.SITE = {
   linkedin: "https://www.linkedin.com/in/debendudutta-0b9a21238",
   github: "",            // e.g. "https://github.com/yourusername"
   instagram: "",         // optional
-  photo: "assets/profile.jpg",   // replace with your own photo (same name, or change path)
-  cv: "pdfs/CV_Debendu_Dutta.pdf", // put your CV PDF here (see README)
+  photo: "profile.jpg",   // replace with your own photo (same name, or change path)
+  cv: "CV_Debendu_Dutta.pdf", // put your CV PDF here (see README)
 
   about: [
     "I am an M.Sc. student in Pure Mathematics at IIT Bombay, deeply interested in understanding basic mathematical ideas and structures. My studies focus on proof-based learning, logical thinking, and clear reasoning.",
