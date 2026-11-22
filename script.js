@@ -99,7 +99,26 @@
     f.addEventListener('load', () => sendTheme(f));
     f.addEventListener('mouseenter', () => cur.classList.add('hide'));
     f.addEventListener('mouseleave', () => cur.classList.remove('hide'));
+    // Calculators capture wheel/touch gestures, which would trap page scrolling: keep them locked until tapped.
+    if (!wrap.classList.contains('auto')) {
+      const body = f.closest('.lab-body');
+      const lock = document.createElement('button'); lock.type = 'button'; lock.className = 'lab-lock';
+      lock.setAttribute('aria-label', 'Activate this calculator');
+      lock.innerHTML = '<span><b class="c">Click to interact</b><b class="t">Tap to interact</b></span>';
+      body.appendChild(lock);
+      const done = document.createElement('button'); done.type = 'button'; done.className = 'lab-done'; done.textContent = 'Done ✓';
+      const bar = wrap.querySelector('.graph-bar div'); bar.insertBefore(done, bar.firstChild);
+      const live = on => { wrap.classList.toggle('live', on); if (on) { try { f.focus(); } catch (e) { } } };
+      lock.onclick = () => live(true);
+      done.onclick = () => live(false);
+      document.addEventListener('pointerdown', e => { if (!wrap.contains(e.target)) live(false); }, true);
+      if (matchMedia('(hover:hover)').matches) wrap.addEventListener('mouseleave', () => { if (!document.fullscreenElement) live(false); });
+      new IntersectionObserver(es => { if (!es[0].isIntersecting) live(false); }, { threshold: 0 }).observe(wrap);
+      document.addEventListener('fullscreenchange', () => live(document.fullscreenElement === wrap));
+      wrap._live = live;
+    }
     const full = wrap.querySelector('.lab-full');
+
     if (full) full.onclick = () => {
       const rf = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
       Promise.resolve(rf ? rf.call(wrap) : Promise.reject()).catch(() => window.open(f.getAttribute('src'), '_blank', 'noopener'));
