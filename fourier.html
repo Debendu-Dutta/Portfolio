@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fourier Square Wave</title>
+<style>
+  :root {
+    color-scheme: dark;
+    --bg: #0f1420; --panel: #181f31; --text: #e6e9f2; --muted: #8b94ad;
+    --accent: #4cc9f0; --accent2: #f72585; --grid: #2a3350; --ideal: #ffd166;
+    --stage: #0b101c; --btn2: #2a3350; --btn-text: #04121a; --vec: 230,233,242; --ring: 76,201,240;
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --bg: #f6f3ea; --panel: #ffffff; --text: #14183a; --muted: #566074;
+    --accent: #0b7aa8; --accent2: #c0185f; --grid: #cfd4e2; --ideal: #a8730a;
+    --stage: #fbfaf5; --btn2: #e3e6f0; --btn-text: #ffffff; --vec: 20,24,58; --ring: 11,122,168;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  .wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
+  h1 { font-size: 1.5rem; margin: 0 0 4px; }
+  p.sub { color: var(--muted); margin: 0 0 16px; }
+  .panel { background: var(--panel); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
+  canvas { width: 100%; display: block; border-radius: 8px; background: var(--stage); }
+  .controls { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
+  .ctl { display: flex; flex-direction: column; gap: 4px; min-width: 200px; flex: 1; }
+  .ctl label { font-size: .85rem; color: var(--muted); }
+  .ctl b { color: var(--text); }
+  input[type=range] { width: 100%; accent-color: var(--accent); }
+  .checks { display: flex; flex-wrap: wrap; gap: 14px; font-size: .9rem; }
+  .checks label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+  button { background: var(--accent); color: var(--btn-text); border: 0; border-radius: 8px;
+    padding: 8px 16px; font-weight: 600; cursor: pointer; }
+  button.secondary { background: var(--btn2); color: var(--text); }
+  .formula { font-family: ui-monospace, Menlo, Consolas, monospace; font-size: .9rem;
+    color: var(--muted); overflow-x: auto; white-space: nowrap; }
+  .formula span { color: var(--text); }
+  .stats { display: flex; gap: 24px; flex-wrap: wrap; font-size: .9rem; color: var(--muted); }
+  .stats b { color: var(--accent2); }
+  .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:.8rem; color:var(--muted); margin-top:8px; }
+  .legend i { display:inline-block; width:14px; height:3px; margin-right:6px; vertical-align:middle; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Fourier Series: Square Wave</h1>
+  <p class="sub">Build a square wave by adding odd sine harmonics. Increase the number of terms and watch the sum converge.</p>
+
+  <div class="panel">
+    <div class="controls">
+      <div class="ctl">
+        <label>Number of harmonics (N): <b id="nVal">5</b></label>
+        <input type="range" id="n" min="1" max="100" value="5">
+      </div>
+      <div class="ctl">
+        <label>Animation speed: <b id="sVal">1.0</b>×</label>
+        <input type="range" id="speed" min="0" max="4" step="0.1" value="1">
+      </div>
+      <div class="checks">
+        <label><input type="checkbox" id="showCircles" checked> Rotating circles</label>
+      </div>
+      <div>
+        <button id="play">Pause</button>
+        <button id="reset" class="secondary">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <canvas id="anim" height="360"></canvas>
+  </div>
+
+
+  <div class="panel">
+    <div class="formula" id="formula"></div>
+    <div class="stats" style="margin-top:10px">
+      <span>Highest harmonic: <b id="hMax">–</b></span>
+      <span>Peak overshoot (Gibbs): <b id="gibbs">–</b></span>
+      <span>RMS error vs ideal: <b id="rms">–</b></span>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const nSlider = $('n'), speedSlider = $('speed');
+  const anim = $('anim');
+  const actx = anim.getContext('2d');
+  const css = getComputedStyle(document.documentElement);
+  let cache = {};
+  const C = k => cache[k] || (cache[k] = css.getPropertyValue(k).trim());
+  const refreshColors = () => { cache = {}; };
+
+  let N = 5, speed = 1, playing = true, t = 0, last = performance.now();
+  let trace = [];
+
+  function fit(canvas, ctx) {
+    const dpr = window.devicePixelRatio || 1;
+    const w = canvas.clientWidth, h = parseInt(canvas.getAttribute('height'));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+      canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
+      trace = [];
+    }
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    return { w, h };
+  }
+
+  // partial sum of square wave: (4/pi) * sum_{k=1..N} sin((2k-1)x)/(2k-1)
+  function fs(x, n) {
+    let s = 0;
+    for (let k = 1; k <= n; k++) { const m = 2 * k - 1; s += Math.sin(m * x) / m; }
+    return 4 / Math.PI * s;
+  }
+  const ideal = x => (Math.sin(x) >= 0 ? 1 : -1);
+
+  function drawAnim() {
+    const { w, h } = fit(anim, actx);
+    const g = actx;
+    g.clearRect(0, 0, w, h);
+    const cy = h / 2, R = Math.min(h * 0.28, w * 0.14);
+    const cx = Math.min(w * 0.22, 190);
+    const waveX = cx + R * 1.9 + 40;
+    const waveW = w - waveX - 16;
+
+    // axes
+    g.strokeStyle = C('--grid'); g.lineWidth = 1;
+    g.beginPath(); g.moveTo(waveX, cy); g.lineTo(w - 8, cy); g.stroke();
+    // Ideal square-wave levels (±1) sit at height `scale`; the first circle has radius 4/π · scale = R
+    const scale = R * Math.PI / 4;
+    g.strokeStyle = C('--ideal'); g.globalAlpha = .55;
+    g.setLineDash([4, 4]);
+    [-1, 1].forEach(v => { g.beginPath(); g.moveTo(waveX, cy - v * scale); g.lineTo(w - 8, cy - v * scale); g.stroke(); });
+    g.setLineDash([]); g.globalAlpha = 1;
+
+    let x = cx, y = cy;
+    const showC = $('showCircles').checked;
+    for (let k = 1; k <= N; k++) {
+      const m = 2 * k - 1;
+      const r = 4 / (Math.PI * m) * scale;
+      const nx = x + r * Math.cos(m * t);
+      const ny = y - r * Math.sin(m * t);
+      if (showC) {
+        g.strokeStyle = 'rgba(' + C('--ring') + ',' + Math.max(0.15, 0.7 / Math.sqrt(k)) + ')';
+        g.lineWidth = 1;
+        g.beginPath(); g.arc(x, y, r, 0, Math.PI * 2); g.stroke();
+        g.strokeStyle = 'rgba(' + C('--vec') + ',.5)';
+        g.beginPath(); g.moveTo(x, y); g.lineTo(nx, ny); g.stroke();
+      }
+      x = nx; y = ny;
+    }
+    // tip
+    g.fillStyle = C('--accent2');
+    g.beginPath(); g.arc(x, y, 4, 0, Math.PI * 2); g.fill();
+
+    // connector
+    g.strokeStyle = C('--accent2'); g.globalAlpha = .6; g.lineWidth = 1;
+    g.setLineDash([3, 3]);
+    g.beginPath(); g.moveTo(x, y); g.lineTo(waveX, y); g.stroke();
+    g.setLineDash([]); g.globalAlpha = 1;
+
+    // trace
+    trace.unshift(y);
+    const maxPts = Math.floor(waveW);
+    if (trace.length > maxPts) trace.length = maxPts;
+    g.strokeStyle = C('--accent'); g.lineWidth = 2;
+    g.beginPath();
+    trace.forEach((v, i) => { const px = waveX + i; i ? g.lineTo(px, v) : g.moveTo(px, v); });
+    g.stroke();
+
+    // labels
+    g.fillStyle = C('--muted'); g.font = '12px system-ui';
+    g.fillText('Sum of ' + N + ' rotating vectors', 12, 20);
+    g.fillText('Height of the tip over time', waveX, 20);
+  }
+
+  function updateInfo() {
+    $('nVal').textContent = N;
+    $('hMax').textContent = (2 * N - 1) + (N === 1 ? ' (fundamental only)' : '');
+    // overshoot and rms over (0, pi)
+    let peak = 0, se = 0, cnt = 0;
+    const M = 4000;
+    for (let i = 1; i < M; i++) {
+      const x = Math.PI * i / M;
+      const v = fs(x, N);
+      if (v > peak) peak = v;
+      const e = v - 1; se += e * e; cnt++;
+    }
+    $('gibbs').textContent = ((peak - 1) * 100).toFixed(1) + '%';
+    $('rms').textContent = Math.sqrt(se / cnt).toFixed(4);
+    const terms = [];
+    const show = Math.min(N, 4);
+    for (let k = 1; k <= show; k++) {
+      const m = 2 * k - 1;
+      terms.push(m === 1 ? 'sin(x)' : 'sin(' + m + 'x)/' + m);
+    }
+    $('formula').innerHTML = 'f(x) ≈ <span>(4/π)</span> · [ <span>' + terms.join(' + ') +
+      (N > show ? ' + … + sin(' + (2 * N - 1) + 'x)/' + (2 * N - 1) : '') + '</span> ]';
+  }
+
+  function frame(now) {
+    const dt = (now - last) / 1000; last = now;
+    if (playing) t += dt * speed * 1.6;
+    drawAnim();
+    requestAnimationFrame(frame);
+  }
+
+  nSlider.addEventListener('input', () => { N = +nSlider.value; trace = []; updateInfo(); });
+  speedSlider.addEventListener('input', () => { speed = +speedSlider.value; $('sVal').textContent = speed.toFixed(1); });
+  $('play').addEventListener('click', () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; });
+  $('reset').addEventListener('click', () => { t = 0; trace = []; });
+  window.addEventListener('resize', () => { trace = []; });
+
+  window.__refreshFourierColors = refreshColors;
+  updateInfo();
+  requestAnimationFrame(frame);
+})();
+
+/* Theme sync: the portfolio page tells this lab whether it is light or dark. */
+addEventListener('message', function (e) {
+  if (e.source !== window.parent) return;
+  var d = e.data;
+  if (d && d.type === 'plotline-theme' && (d.theme === 'light' || d.theme === 'dark')) {
+    document.documentElement.setAttribute('data-theme', d.theme);
+    window.__refreshFourierColors && window.__refreshFourierColors();
+  }
+});
+</script>
+</body>
+</html>
