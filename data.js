@@ -16,11 +16,11 @@ window.SITE = {
   ],
   location: "Mumbai, Maharashtra, India  ·  Home: Egra, West Bengal",
   email: "debendu003@gmail.com",
-  linkedin: "www.linkedin.com/in/debendu-dutta-0b9a21238",
+  linkedin: "https://www.linkedin.com/in/debendudutta-0b9a21238",
   github: "",            // e.g. "https://github.com/yourusername"
   instagram: "",         // optional
-  photo: "profile.jpg",   // replace with your own photo (same name, or change path)
-  cv: "CV_Debendu_Dutta.pdf", // put your CV PDF here (see README)
+  photo: "assets/profile.jpg",   // replace with your own photo (same name, or change path)
+  cv: "pdfs/CV_Debendu_Dutta.pdf", // put your CV PDF here (see README)
 
   about: [
     "I am an M.Sc. student in Pure Mathematics at IIT Bombay, deeply interested in understanding basic mathematical ideas and structures. My studies focus on proof-based learning, logical thinking, and clear reasoning.",
@@ -115,17 +115,17 @@ window.SITE = {
   /* ---------------- PDF LIBRARY ----------------
      1) Copy the PDF into the  pdfs/  folder.  2) Add a line below.          */
   pdfs: [
-    { title: "Sample: Cantor set picture", desc: "Placeholder PDF — replace with your own notes, slides or papers.", file: "sample-notes.pdf", tag: "sample" }
+    { title: "Sample: Cantor set picture", desc: "Placeholder PDF — replace with your own notes, slides or papers.", file: "pdfs/sample-notes.pdf", tag: "sample" }
     // { title: "Lebesgue Outer Measure — Beamer slides", desc: "Lecture slides prepared at IIT Patna.", file: "pdfs/lebesgue-outer-measure.pdf", tag: "slides" },
   ],
 
   /* ---------------- GALLERY ----------------
      Drop your photos in assets/ (or a new folder) and add them here.        */
   gallery: [
-    { src: "mandelbrot.jpg", caption: "Mandelbrot set — complexity from z² + c" },
-    { src: "cantor.jpg", caption: "Cantor set — the first 8 stages" },
-    { src: "torus.jpg", caption: "A torus — the shape of topology" },
-    { src: "complex.jpg", caption: "Domain colouring of a rational function" },
-    { src: "lissajous.jpg", caption: "Lissajous curves" }
+    { src: "assets/mandelbrot.jpg", caption: "Mandelbrot set — complexity from z² + c" },
+    { src: "assets/cantor.jpg", caption: "Cantor set — the first 8 stages" },
+    { src: "assets/torus.jpg", caption: "A torus — the shape of topology" },
+    { src: "assets/complex.jpg", caption: "Domain colouring of a rational function" },
+    { src: "assets/lissajous.jpg", caption: "Lissajous curves" }
   ]
 };

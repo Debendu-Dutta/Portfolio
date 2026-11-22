@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Fourier Square Wave</title>
+<script>if (window.self !== window.top) document.documentElement.classList.add("embedded");</script>
 <style>
   :root {
     color-scheme: dark;
@@ -18,13 +19,14 @@
     --stage: #fbfaf5; --btn2: #e3e6f0; --btn-text: #ffffff; --vec: 20,24,58; --ring: 11,122,168;
   }
   * { box-sizing: border-box; }
+  html { overflow-x: hidden; -webkit-text-size-adjust: 100%; }
   body { margin: 0; background: var(--bg); color: var(--text);
     font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
   .wrap { max-width: 980px; margin: 0 auto; padding: 20px 16px 40px; }
   h1 { font-size: 1.5rem; margin: 0 0 4px; }
   p.sub { color: var(--muted); margin: 0 0 16px; }
   .panel { background: var(--panel); border-radius: 12px; padding: 14px; margin-bottom: 14px; }
-  canvas { width: 100%; display: block; border-radius: 8px; background: var(--stage); }
+  canvas { width: 100%; height: 360px; display: block; border-radius: 8px; background: var(--stage); }
   .controls { display: flex; flex-wrap: wrap; gap: 16px 24px; align-items: center; }
   .ctl { display: flex; flex-direction: column; gap: 4px; min-width: 200px; flex: 1; }
   .ctl label { font-size: .85rem; color: var(--muted); }
@@ -42,6 +44,11 @@
   .stats b { color: var(--accent2); }
   .legend { display:flex; gap:16px; flex-wrap:wrap; font-size:.8rem; color:var(--muted); margin-top:8px; }
   .legend i { display:inline-block; width:14px; height:3px; margin-right:6px; vertical-align:middle; }
+  /* when shown inside the portfolio, the page supplies the title and the frame auto-sizes to this content */
+  html.embedded h1, html.embedded p.sub { display: none; }
+  html.embedded .wrap { padding: 12px 12px 4px; }
+  html.embedded body { background: transparent; }
+  @media (max-width: 560px) { .panel { padding: 12px; } .ctl { min-width: 100%; } .stats { gap: 6px 18px; } }
 </style>
 </head>
 <body>
@@ -100,13 +107,16 @@
 
   function fit(canvas, ctx) {
     const dpr = window.devicePixelRatio || 1;
-    const w = canvas.clientWidth, h = parseInt(canvas.getAttribute('height'));
-    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) {
+    const w = Math.round(canvas.getBoundingClientRect().width) || canvas.clientWidth, h = w < 560 ? 300 : 360;
+    // only resize the bitmap when the layout width really changed (>2px), so mobile
+    // address-bar / scrollbar jitter does not clear the canvas and the trace every frame
+    if (!canvas._w || Math.abs(canvas._w - w) > 2 || canvas._dpr !== dpr || canvas._h !== h) {
+      canvas._w = w; canvas._dpr = dpr; canvas._h = h; canvas.style.height = h + 'px';
       canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr);
       trace = [];
     }
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    return { w, h };
+    ctx.setTransform(canvas.width / canvas._w, 0, 0, canvas.height / h, 0, 0);
+    return { w: canvas._w, h };
   }
 
   // partial sum of square wave: (4/pi) * sum_{k=1..N} sin((2k-1)x)/(2k-1)
@@ -121,9 +131,10 @@
     const { w, h } = fit(anim, actx);
     const g = actx;
     g.clearRect(0, 0, w, h);
-    const cy = h / 2, R = Math.min(h * 0.28, w * 0.14);
-    const cx = Math.min(w * 0.22, 190);
-    const waveX = cx + R * 1.9 + 40;
+    const compact = w < 560;   // phones: smaller circle so the wave trace gets most of the width
+    const cy = h / 2, R = compact ? Math.min(h * 0.26, w * 0.1) : Math.min(h * 0.28, w * 0.14);
+    const cx = compact ? R * 1.25 + 6 : Math.min(w * 0.22, 190);
+    const waveX = cx + R * 1.9 + (compact ? 14 : 40);
     const waveW = w - waveX - 16;
 
     // axes
@@ -173,8 +184,8 @@
 
     // labels
     g.fillStyle = C('--muted'); g.font = '12px system-ui';
-    g.fillText('Sum of ' + N + ' rotating vectors', 12, 20);
-    g.fillText('Height of the tip over time', waveX, 20);
+    g.fillText(compact ? N + ' vectors' : 'Sum of ' + N + ' rotating vectors', 12, 20);
+    g.fillText(compact ? 'Tip height over time' : 'Height of the tip over time', waveX, 20);
   }
 
   function updateInfo() {
@@ -201,22 +212,41 @@
       (N > show ? ' + … + sin(' + (2 * N - 1) + 'x)/' + (2 * N - 1) : '') + '</span> ]';
   }
 
+  // The loop sleeps while the canvas is off-screen or the tab is hidden (saves battery on phones).
+  let visible = true, rafId = 0;
   function frame(now) {
-    const dt = (now - last) / 1000; last = now;
+    rafId = 0;
+    if (!visible || document.hidden) { last = now; return; }
+    const dt = Math.max(0, Math.min((now - last) / 1000, 0.1)); last = now;
     if (playing) t += dt * speed * 1.6;
     drawAnim();
-    requestAnimationFrame(frame);
+    rafId = requestAnimationFrame(frame);
   }
+  function wake() {
+    if (!rafId && visible && !document.hidden) { last = performance.now(); rafId = requestAnimationFrame(frame); }
+  }
+  if ('IntersectionObserver' in window) {
+    new IntersectionObserver(es => { visible = es[es.length - 1].isIntersecting; wake(); }).observe(anim);
+  }
+  document.addEventListener('visibilitychange', wake);
 
   nSlider.addEventListener('input', () => { N = +nSlider.value; trace = []; updateInfo(); });
   speedSlider.addEventListener('input', () => { speed = +speedSlider.value; $('sVal').textContent = speed.toFixed(1); });
   $('play').addEventListener('click', () => { playing = !playing; $('play').textContent = playing ? 'Pause' : 'Play'; });
   $('reset').addEventListener('click', () => { t = 0; trace = []; });
-  window.addEventListener('resize', () => { trace = []; });
+  
 
   window.__refreshFourierColors = refreshColors;
   updateInfo();
-  requestAnimationFrame(frame);
+  wake();
+
+  // Tell the portfolio page how tall this content is so the frame fits exactly (no inner scrollbar on phones).
+  if (document.documentElement.classList.contains('embedded') && 'ResizeObserver' in window) {
+    const wrap = document.querySelector('.wrap');
+    const report = () => { try { parent.postMessage({ type: 'plotline-height', height: Math.ceil(wrap.getBoundingClientRect().height) + 2 }, '*'); } catch (e) {} };
+    new ResizeObserver(report).observe(wrap);
+    addEventListener('load', report);
+  }
 })();
 
 /* Theme sync: the portfolio page tells this lab whether it is light or dark. */

@@ -88,18 +88,30 @@
   document.addEventListener('mouseover', e => cur.classList.toggle('big', !!e.target.closest('a,button,.post,figure,.chips span')));
 
 
-  /* Graphing calculator (iframe): keep its theme in sync, full screen, cursor fix */
-  const gFrame = $('#graphFrame'), gWrap = $('#graphWrap');
-  function sendGraphTheme() {
-    try { gFrame.contentWindow.postMessage({ type: 'plotline-theme', theme: root.classList.contains('light') ? 'light' : 'dark' }, '*'); } catch (e) { }
+  /* Embedded labs (2D graph, 3D graph, Fourier): keep their theme in sync, full screen, cursor fix, auto height */
+  const labFrames = [...document.querySelectorAll('.lab-frame')];
+  function sendTheme(f) {
+    try { f.contentWindow.postMessage({ type: 'plotline-theme', theme: root.classList.contains('light') ? 'light' : 'dark' }, '*'); } catch (e) { }
   }
-  gFrame.addEventListener('load', sendGraphTheme);
-  $('#graphFull').onclick = () => {
-    const go = gWrap.requestFullscreen ? gWrap.requestFullscreen() : Promise.reject();
-    Promise.resolve(go).catch(() => window.open('plotline.html', '_blank', 'noopener'));
-  };
-  gFrame.addEventListener('mouseenter', () => cur.classList.add('hide'));
-  gFrame.addEventListener('mouseleave', () => cur.classList.remove('hide'));
+  function sendGraphTheme() { labFrames.forEach(sendTheme); }
+  labFrames.forEach(f => {
+    const wrap = f.closest('.graph-wrap');
+    f.addEventListener('load', () => sendTheme(f));
+    f.addEventListener('mouseenter', () => cur.classList.add('hide'));
+    f.addEventListener('mouseleave', () => cur.classList.remove('hide'));
+    const full = wrap.querySelector('.lab-full');
+    if (full) full.onclick = () => {
+      const rf = wrap.requestFullscreen || wrap.webkitRequestFullscreen;
+      Promise.resolve(rf ? rf.call(wrap) : Promise.reject()).catch(() => window.open(f.getAttribute('src'), '_blank', 'noopener'));
+    };
+  });
+  // a lab can report its content height so its frame fits exactly (used by the Fourier lab)
+  addEventListener('message', e => {
+    const d = e.data;
+    if (!d || d.type !== 'plotline-height' || !(d.height > 0)) return;
+    const f = labFrames.find(fr => fr.contentWindow === e.source);
+    if (f && f.closest('.graph-wrap.auto')) f.style.height = Math.min(Math.ceil(d.height), 3000) + 'px';
+  });
 
   function tilt(c) {
     c.addEventListener('mousemove', e => { const r = c.getBoundingClientRect(), x = (e.clientX - r.left) / r.width - .5, y = (e.clientY - r.top) / r.height - .5; c.style.transform = `perspective(700px) rotateY(${x * 10}deg) rotateX(${-y * 10}deg) translateY(-4px)`; });

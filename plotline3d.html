@@ -621,7 +621,7 @@ button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); ou
   function setKb(open) {
     kbOpen = open; kb.hidden = !open; appEl.classList.toggle("kbopen", open);
     kbt.setAttribute("aria-expanded", String(open));
-    S.rows.forEach(function (r) { r.inp.setAttribute("inputmode", open && coarse ? "none" : "text"); });
+    S.rows.forEach(function (r) { if (r.inp) r.inp.setAttribute("inputmode", open && coarse ? "none" : "text"); });
   }
   // keep the text cursor in the expression box while keys are pressed
   kb.addEventListener("mousedown", function (e) { e.preventDefault(); });

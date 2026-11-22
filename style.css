@@ -114,10 +114,16 @@ h3{font-family:var(--serif);font-size:1.7rem;margin:2.2rem 0 1rem;color:var(--go
 .graph-bar div{display:flex;gap:1rem;align-items:center}
 .graph-bar button{background:none;border:1px solid var(--line);color:var(--cyan);border-radius:8px;padding:3px 10px;font:inherit;cursor:pointer}
 .graph-bar button:hover{border-color:var(--gold);color:var(--gold)}
-#graphFrame{display:block;width:100%;height:min(82vh,760px);min-height:560px;border:0;background:var(--bg2)}
+.graph-wrap + .graph-wrap{margin-top:1.5rem}
+.lab-frame{display:block;width:100%;height:min(82vh,760px);min-height:560px;border:0;background:var(--bg2)}
 .graph-wrap:fullscreen{display:flex;flex-direction:column;border-radius:0;background:var(--bg)}
-.graph-wrap:fullscreen #graphFrame{flex:1;height:auto;min-height:0}
-@media(max-width:860px){#graphFrame{height:820px}}
+.graph-wrap:fullscreen .lab-frame{flex:1;height:auto;min-height:0}
+/* Fourier lab: height is set by the page inside (see script.js); these are only the pre-load defaults */
+.graph-wrap.auto .lab-frame{height:820px;min-height:0;transition:height .2s}
+.touch-only{display:none}
+@media(hover:none){.touch-only{display:inline}}
+@media(max-width:860px){.lab-frame{height:820px}.graph-wrap.auto .lab-frame{height:1100px}.graph-wrap{border-radius:14px}}
+@media(max-width:560px){.graph-section{padding-left:3vw;padding-right:3vw}.graph-section .title,.graph-section .lead{padding-left:3vw;padding-right:3vw}.graph-bar{font-size:.72rem;padding:.5rem .7rem}.graph-bar div{gap:.6rem}}
 
 /* PDFS */
 .pdfs{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:1.2rem}
@@ -159,6 +165,9 @@ footer{position:relative;text-align:center;padding:2rem 1rem 3rem;color:var(--mu
 .lb{position:relative;max-width:92vw;max-height:90vh;text-align:center}
 .lb img{max-height:80vh;border-radius:12px;margin:auto}
 .lb figcaption{color:#ddd;margin-top:.7rem}
+
+/* the nav now has more links, so tighten it on mid-size screens before it collapses into the burger */
+@media(min-width:861px) and (max-width:1180px){.nav nav{gap:.95rem}.nav nav a{font-size:.74rem;letter-spacing:.05em}}
 
 /* RESPONSIVE */
 @media(max-width:860px){
