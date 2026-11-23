@@ -188,3 +188,20 @@ footer{position:relative;text-align:center;padding:2rem 1rem 3rem;color:var(--mu
   .section{padding:80px 6vw}
 }
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}.reveal,.tl{opacity:1;transform:none}}
+
+/* PROOF-STYLE POSTS */
+.modal-card h3{font-size:1.5rem;margin:1.9rem 0 .6rem}
+.modal-card h4{font-family:var(--serif);font-size:1.2rem;color:var(--cyan);margin:1.3rem 0 .35rem}
+.modal-card ul,.modal-card ol{margin:0 0 1rem 1.3rem}
+.modal-card li{margin-bottom:.45rem;font-size:1.04rem}
+.modal-card .thm{border:1px solid var(--gold);border-left-width:4px;border-radius:12px;padding:.9rem 1.3rem .3rem;background:var(--card);margin:1.3rem 0}
+.modal-card .eg{border-left:3px solid var(--cyan);background:var(--card);padding:.8rem 1.2rem .1rem;border-radius:0 12px 12px 0;margin:1.2rem 0}
+.modal-card .lbl{display:block;font-family:var(--mono);font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:.35rem}
+.modal-card .eg .lbl{color:var(--cyan)}
+.modal-card .qed{text-align:right;color:var(--gold);font-size:1.3rem;margin:-.4rem 0 0}
+.modal-card table.t{border-collapse:collapse;margin:.4rem 0 1rem;font-family:var(--mono);font-size:.85rem;width:100%}
+.modal-card table.t th,.modal-card table.t td{border:1px solid var(--line);padding:.3rem .6rem;text-align:center}
+.modal-card table.t th{color:var(--gold);font-weight:600}
+.modal-card .katex-display{overflow-x:auto;overflow-y:hidden;padding:.2rem 0}
+.modal-card figure{margin:1.4rem 0}
+@media(max-width:560px){.modal-card{padding:1.4rem}.modal-card h2{font-size:2rem}}

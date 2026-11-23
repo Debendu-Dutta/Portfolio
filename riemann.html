@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Riemann Sum Calculator</title>
+<script>try{var s=localStorage.getItem("theme"),e=self!==top;if(s==="light"||s==="dark"||e)document.documentElement.setAttribute("data-theme",s==="light"?"light":"dark")}catch(x){}</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--mu:#6a7285;--bd:#dde1ea;--ac:#3b6cf6;--lo:#3b6cf6;--up:#f08a24;--ok:#13804a;--bad:#c62f3a;--key:#eef1f8;--key2:#d5d9e2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12151c;--card:#1b2029;--tx:#e8ebf3;--mu:#9aa3b8;--bd:#2c3340;--ac:#6f94ff;--lo:#6f94ff;--up:#ffa24d;--ok:#4cd08a;--bad:#ff6b74;--key:#252b37;--key2:#343b4a}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#12151c;--card:#1b2029;--tx:#e8ebf3;--mu:#9aa3b8;--bd:#2c3340;--ac:#6f94ff;--lo:#6f94ff;--up:#ffa24d;--ok:#4cd08a;--bad:#ff6b74;--key:#252b37;--key2:#343b4a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:18px 14px 40px}
+h1{font-size:24px;margin:4px 0}.sub{color:var(--mu);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+label{font-size:12px;color:var(--mu);display:block;margin-bottom:3px;font-weight:600}
+input[type=text],input[type=number],select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);font:16px ui-monospace,Menlo,Consolas,monospace}
+select{font-family:system-ui,sans-serif;font-size:14px}
+input:focus,select:focus{outline:2px solid var(--ac);border-color:transparent}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.grid2{display:grid;grid-template-columns:130px 1fr;gap:10px;margin-top:12px}
+@media(max-width:640px){.grid{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+.toprow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}.toprow>div{flex:1 1 200px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 8px}
+.tab{padding:5px 11px;border:1px solid var(--bd);background:transparent;color:var(--mu);border-radius:20px;cursor:pointer;font-size:13px}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#keys button{min-width:44px;padding:8px 9px;border:1px solid var(--bd);background:var(--key);color:var(--tx);border-radius:8px;cursor:pointer;font:15px ui-monospace,Menlo,Consolas,"Times New Roman",serif}
+#keys button:active{transform:scale(.95)}
+#keys button.it{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-size:17px}
+#keys button.grey{background:var(--key2)}
+#keys button.act{background:var(--ac);color:#fff;border-color:var(--ac)}
+#keys button.s2{grid-column:span 2}
+.kr{display:flex;flex-wrap:wrap;gap:6px}
+.sec{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--mu);margin:12px 0 6px;text-transform:uppercase}
+.sec:first-child{margin-top:2px}
+.kb3{display:flex;flex-wrap:wrap;gap:16px;justify-content:center}
+.pad4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex:1 1 230px;max-width:300px}
+.padr{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1 1 170px;max-width:230px;align-content:start}
+.pad4 button,.padr button{min-width:0!important}
+.qw{display:flex;gap:6px;justify-content:center;margin-bottom:6px}.qw button{flex:1 1 0;min-width:0!important;max-width:60px}
+.qw .w{flex:1.6 1 0;max-width:96px}
+.pwrow{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.pwrow input{flex:1 1 170px;width:auto}.pwrow span{color:var(--mu);font-size:13px}
+.modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.modes label{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;cursor:pointer;color:var(--tx);font-size:14px;margin:0}
+.go{margin-top:14px;width:100%;padding:12px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+.msg{padding:12px 14px;border-radius:10px;margin-bottom:14px;border:1px solid}
+.msg.bad{border-color:var(--bad);color:var(--bad)}.msg.ok{border-color:var(--ok);color:var(--ok)}.msg.warn{border-color:var(--up);color:var(--up)}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.stat{border:1px solid var(--bd);border-radius:10px;padding:10px 12px}.stat b{display:block;font-size:20px;font-family:ui-monospace,Menlo,monospace;word-break:break-all}.stat span{font-size:12px;color:var(--mu)}
+canvas{width:100%;height:340px;display:block}
+.sc{overflow-x:auto;max-height:360px;overflow-y:auto}
+table{border-collapse:collapse;width:100%;font:13px ui-monospace,Menlo,monospace}
+th,td{padding:5px 9px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th{position:sticky;top:0;background:var(--card);color:var(--mu)}
+.note{font-size:13px;color:var(--mu)}
+#interp{font:12px ui-monospace,Menlo,monospace;color:var(--mu);margin:8px 0 0;word-break:break-all}
+details{margin-top:12px;font-size:13px;color:var(--mu)}summary{cursor:pointer;font-weight:600;color:var(--tx)}
+details ul{margin:8px 0 0;padding-left:18px}details li{margin:4px 0}
+code{background:var(--key);padding:1px 5px;border-radius:5px;font-size:12px}
+.tools{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.tools button{padding:5px 11px;border:1px solid var(--bd);background:transparent;color:var(--mu);border-radius:20px;cursor:pointer;font-size:12px}
+#res{display:none}
+</style></head><body><div class="wrap">
+<h1>∑ Riemann Sum Calculator</h1>
+<p class="sub">Lower &amp; upper sums with piecewise functions, a full math keyboard and an automatic Riemann-integrability check.</p>
+
+<div class="card">
+<div class="toprow">
+ <div style="flex:3 1 320px"><label for="fx">f(x) — type, or use the keyboard below</label>
+ <input type="text" id="fx" class="kb" value="sin(x) + x^2" autocomplete="off" spellcheck="false"></div>
+ <div><label for="ex">Examples</label><select id="ex"></select></div>
+</div>
+<p id="interp"></p>
+<div class="tabs" id="tabs"></div><div id="keys"></div>
+<div class="tools"><button id="dk" type="button">⌨ Hide phone keyboard: off</button><span class="note">Turn on to use only the on-screen keyboard.</span></div>
+<div class="grid">
+<div><label for="a">a (start)</label><input type="text" id="a" class="kb" value="0"></div>
+<div><label for="b">b (end)</label><input type="text" id="b" class="kb" value="pi"></div>
+<div><label for="n">n (subintervals)</label><input type="number" id="n" value="10" min="1" max="10000" step="1"></div>
+<div><label for="h">h = (b − a)/n</label><input type="text" id="h" class="kb"></div>
+</div>
+<div class="grid2">
+<div><label for="vr">Variable</label><input type="text" id="vr" class="kb" value="x" autocomplete="off" spellcheck="false"></div>
+<div><label for="cs">Constants / parameters / helper functions (optional), e.g. k=2, α=0.5, g(t)=t^2+1</label><input type="text" id="cs" class="kb" placeholder="k=2, α=0.5" autocomplete="off" spellcheck="false"></div>
+</div>
+<div class="modes">
+<label><input type="radio" name="m" value="lower"> Lower sum</label>
+<label><input type="radio" name="m" value="upper"> Upper sum</label>
+<label><input type="radio" name="m" value="both" checked> Both</label>
+</div>
+<button class="go" id="go">Calculate</button>
+<details><summary>Syntax guide (everything this calculator understands)</summary><ul>
+<li><b>Piecewise:</b> <code>{ x^2 if x&lt;1; 2 if 1&lt;=x&lt;2; 4-x otherwise }</code> (separate pieces with <code>;</code>) — or use the <b>Piecewise</b> tab to build it with boxes. Also works as <code>x&lt;1 ? x : 2</code>.</li>
+<li><b>Chained inequalities:</b> <code>0 &lt; x &lt;= 1</code>; <b>intervals:</b> <code>x ∈ [0, 1)</code>; combine with <code>and</code>, <code>or</code>, <code>xor</code>, <code>not</code> (or ∧ ∨ ¬).</li>
+<li><b>Summation / product:</b> <code>∑(k^2, k, 1, 5)</code> = <code>Sum(…)</code>, <code>∏(1+x/k, k, 1, 4)</code> = <code>Prod(…)</code>. The index can be any letter.</li>
+<li><b>Calculus:</b> <code>∫(t^2, t, 0, x)</code> definite integral, <code>D(sin(t^2), t, x)</code> derivative at x, <code>D2(…)</code> second derivative, <code>Lim(sin(t)/t, t, 0)</code> two-sided limit.</li>
+<li><b>Functions:</b> trig, inverse trig, hyperbolic, inverse hyperbolic, exp, ln, log (base 10) and <code>log(x, base)</code>, sqrt, cbrt, nthRoot, floor, ceil, round, abs, sign, mod, gcd, lcm, factorial <code>n!</code>, gamma, beta, erf, erfc, combinations, permutations, mean, median, min, max, std, variance, plus step helpers <code>H</code>, <code>rect</code>, <code>tri</code>, <code>sinc</code>, <code>clamp</code>, <code>frac</code>.</li>
+<li><b>Symbols:</b> × ÷ · − π √ ∛ ≤ ≥ ≠ ∞ ° ⌊x⌋ ⌈x⌉ |x| x² x³ x⁻¹ a₁ and all Greek letters.</li>
+<li><b>Any letter</b> other than the variable is a parameter: define it in the Constants box (<code>k=2</code>). Use <code>*</code> or a space between variables: <code>k x</code>, not <code>kx</code>.</li>
+</ul></details>
+</div>
+
+<div id="msg"></div>
+<div id="res">
+<div class="card"><div class="res" id="stats"></div></div>
+<div class="card"><canvas id="cv"></canvas><p class="note" id="leg"></p></div>
+<div class="card"><div class="sc" id="tbl"></div></div>
+</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const toNum=v=>{if(typeof v==="number")return v;if(typeof v==="boolean")return +v;if(v&&typeof v.re==="number"&&Math.abs(v.im||0)<1e-12)return v.re;return NaN};
+
+/* ================= big operators registered inside math.js ================= */
+(function(){
+ if(!window.math)return;
+ const cache=new WeakMap();
+ const comp=n=>{let c=cache.get(n);if(!c){c=n.compile();cache.set(n,c)}return c};
+ const U=m=>{const e=new Error(m);e.user=true;return e};
+ const mkLocal=scope=>{
+  if(scope&&typeof scope.keys==="function"&&typeof scope.get==="function"){const m=new Map();for(const k of scope.keys())m.set(k,scope.get(k));return{set:(k,v)=>m.set(k,v),ev:c=>c.evaluate(m)}}
+  const o=Object.assign({},scope);return{set:(k,v)=>{o[k]=v},ev:c=>c.evaluate(o)}};
+ const need=(args,n,nm,sig)=>{if(args.length!==n)throw U(nm+" needs "+n+" arguments: "+sig)};
+ const vname=(node,nm)=>{if(!node.isSymbolNode)throw U(nm+": the 2nd argument must be a plain variable name, e.g. k");return node.name};
+ const num=(node,scope)=>toNum(comp(node).evaluate(scope));
+ const lam=(node,v,scope)=>{const c=comp(node),L=mkLocal(scope);return t=>{L.set(v,t);return toNum(L.ev(c))}};
+ const Sum=(args,m,scope)=>{need(args,4,"Sum","Sum(expression, k, from, to)");const v=vname(args[1],"Sum");
+  const lo=Math.ceil(num(args[2],scope)),hi=Math.floor(num(args[3],scope));
+  if(!isFinite(lo)||!isFinite(hi))throw U("Sum: the limits must be finite numbers");
+  if(hi-lo>2e6)throw U("Sum: too many terms (maximum 2,000,000)");
+  const g=lam(args[0],v,scope);let s=0;for(let k=lo;k<=hi;k++)s+=g(k);return s};
+ const Prod=(args,m,scope)=>{need(args,4,"Prod","Prod(expression, k, from, to)");const v=vname(args[1],"Prod");
+  const lo=Math.ceil(num(args[2],scope)),hi=Math.floor(num(args[3],scope));
+  if(!isFinite(lo)||!isFinite(hi))throw U("Prod: the limits must be finite numbers");
+  if(hi-lo>2e6)throw U("Prod: too many terms (maximum 2,000,000)");
+  const g=lam(args[0],v,scope);let s=1;for(let k=lo;k<=hi;k++)s*=g(k);return s};
+ const adapt=(g,a,b,tol)=>{let cnt=0;const f=t=>{cnt++;return g(t)};
+  const rec=(a,b,fa,fm,fb,whole,tol,d)=>{const m=(a+b)/2,l=(a+m)/2,r=(m+b)/2,fl=f(l),fr=f(r);
+   const L=(m-a)/6*(fa+4*fl+fm),R=(b-m)/6*(fm+4*fr+fb),S=L+R;
+   if(!isFinite(S))return NaN;
+   if(d<=0||cnt>60000||Math.abs(S-whole)<=15*tol)return S+(S-whole)/15;
+   return rec(a,m,fa,fl,fm,L,tol/2,d-1)+rec(m,b,fm,fr,fb,R,tol/2,d-1)};
+  const N=8,w=(b-a)/N;let tot=0;
+  for(let i=0;i<N;i++){const x0=a+i*w,x1=x0+w,xm=(x0+x1)/2,f0=f(x0),fm=f(xm),f1=f(x1);
+   tot+=rec(x0,x1,f0,fm,f1,(x1-x0)/6*(f0+4*fm+f1),tol/N,16)}
+  return tot};
+ const Int=(args,m,scope)=>{need(args,4,"Int","Int(expression, t, from, to)");const v=vname(args[1],"Int");
+  const a=num(args[2],scope),b=num(args[3],scope);
+  if(!isFinite(a)||!isFinite(b))throw U("Int: the limits must be finite numbers");
+  if(a===b)return 0;const g=lam(args[0],v,scope);
+  return a<b?adapt(g,a,b,1e-10):-adapt(g,b,a,1e-10)};
+ const D=(args,m,scope)=>{need(args,3,"D","D(expression, t, point)");const v=vname(args[1],"D");
+  const p=num(args[2],scope),g=lam(args[0],v,scope),h=1e-3*Math.max(1,Math.abs(p));
+  return(g(p-2*h)-8*g(p-h)+8*g(p+h)-g(p+2*h))/(12*h)};
+ const D2=(args,m,scope)=>{need(args,3,"D2","D2(expression, t, point)");const v=vname(args[1],"D2");
+  const p=num(args[2],scope),g=lam(args[0],v,scope),h=1e-2*Math.max(1,Math.abs(p));
+  return(-g(p+2*h)+16*g(p+h)-30*g(p)+16*g(p-h)-g(p-2*h))/(12*h*h)};
+ const Lim=(args,m,scope)=>{need(args,3,"Lim","Lim(expression, t, point)");const v=vname(args[1],"Lim");
+  const c=num(args[2],scope),g=lam(args[0],v,scope),s=Math.max(1,Math.abs(c));
+  const L=g(c-1e-7*s),R=g(c+1e-7*s),L2=g(c-1e-5*s),R2=g(c+1e-5*s);
+  const ok=(p,q)=>isFinite(p)&&isFinite(q)&&Math.abs(p-q)<=1e-4*(1+Math.abs(p));
+  return ok(L,R)&&ok(L,L2)&&ok(R,R2)?(L+R)/2:NaN};
+ const all={Sum,Prod,Int,D,D2,Lim};
+ for(const k in all)all[k].rawArgs=true;
+ math.import(all,{override:true});
+})();
+
+/* ================= scope, parsing, normalising ================= */
+function scopeBase(){return{x:0,
+ ln:Math.log,lg:Math.log10,
+ log:(v,b)=>b===undefined?Math.log10(v):Math.log(v)/Math.log(b),
+ logb:(v,b)=>Math.log(v)/Math.log(b),
+ arcsin:Math.asin,arccos:Math.acos,arctan:Math.atan,sgn:Math.sign,
+ tau:2*Math.PI,phi:(1+Math.sqrt(5))/2,
+ H:t=>t<0?0:1,heaviside:t=>t<0?0:1,
+ rect:t=>Math.abs(t)<.5?1:Math.abs(t)===.5?.5:0,
+ tri:t=>Math.max(0,1-Math.abs(t)),
+ sinc:t=>t===0?1:Math.sin(Math.PI*t)/(Math.PI*t),
+ clamp:(v,lo,hi)=>Math.min(Math.max(v,lo),hi),
+ frac:t=>t-Math.floor(t),
+ erfc:t=>1-math.erf(t),
+ beta:(p,q)=>math.gamma(p)*math.gamma(q)/math.gamma(p+q)}}
+const KW=new Set(["and","or","xor","not","mod","to","in","if","else"]);
+function splitTop(s,re){const out=[];let d=0,cur="";for(const ch of s){if("([{".includes(ch))d++;else if(")]}".includes(ch))d--;if(d===0&&re.test(ch)){out.push(cur);cur=""}else cur+=ch}out.push(cur);return out}
+
+function parseCases(s){
+ const m=s.trim().match(/^(?:piecewise\s*)?\{([\s\S]*)\}$/i);if(!m)return null;
+ const out=[];
+ for(const raw of splitTop(m[1],/[;\n]/)){const q=raw.trim();if(!q)continue;
+  let k=q.match(/^([\s\S]+?)\s*,?\s*\b(?:otherwise|else)\b\s*$/i);
+  if(k){out.push({e:k[1].trim(),c:null});continue}
+  k=q.match(/^([\s\S]+?)\s*,?\s*\b(?:if|when|for|where)\b\s*([\s\S]+)$/i);
+  if(!k)throw new Error("Piece “"+q+"” needs “if <condition>” (or “otherwise”). Separate pieces with “;”.");
+  out.push({e:k[1].trim(),c:k[2].trim()})}
+ if(!out.length)throw new Error("The piecewise definition { … } is empty.");
+ return out}
+function buildPiecewise(cs){let r="NaN";for(let i=cs.length-1;i>=0;i--){const{e,c}=cs[i];r=c===null?"("+e+")":"(("+c+") ? ("+e+") : "+r+")"}return r}
+
+const SUP="⁰¹²³⁴⁵⁶⁷⁸⁹",SUB="₀₁₂₃₄₅₆₇₈₉";
+function norm(s){
+ return s
+ .replace(/&&/g," and ").replace(/\|\|/g," or ").replace(/∧/g," and ").replace(/∨/g," or ").replace(/⊻/g," xor ").replace(/¬/g," not ")
+ .replace(/π/g," pi ").replace(/[×·∙⋅∗]/g,"*").replace(/[÷∕]/g,"/").replace(/[−–—‑]/g,"-")
+ .replace(/≤/g,"<=").replace(/≥/g,">=").replace(/≠/g,"!=").replace(/≡/g,"==").replace(/\*\*/g,"^")
+ .replace(/([\p{L}_][\p{L}\p{N}_]*)\s*∈\s*([\[(])\s*((?:[^,\[\]()]|\([^()]*\))+?)\s*,\s*((?:[^,\[\]()]|\([^()]*\))+?)\s*([\])])/gu,
+   (m,v,l,a,b,r)=>"("+v+(l==="["?">=":">")+a+" and "+v+(r==="]"?"<=":"<")+b+")")
+ .replace(/⌊([^⌋]*)⌋/g,"floor($1)").replace(/⌈([^⌉]*)⌉/g,"ceil($1)")
+ .replace(/[∑Σ]\s*\(/g,"Sum(").replace(/[∏Π]\s*\(/g,"Prod(").replace(/∫\s*\(/g,"Int(").replace(/∂\s*\(/g,"D(")
+ .replace(/∛\s*\(/g,"cbrt(").replace(/√\s*\(/g,"sqrt(")
+ .replace(/∛\s*([\p{L}\p{N}_.]+)/gu,"cbrt($1)").replace(/√\s*([\p{L}\p{N}_.]+)/gu,"sqrt($1)")
+ .replace(/([⁺⁻]?)([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g,(m,sg,d)=>"^("+(sg==="⁻"?"-":"")+[...d].map(c=>SUP.indexOf(c)).join("")+")")
+ .replace(/[₀₁₂₃₄₅₆₇₈₉]+/g,m=>"_"+[...m].map(c=>SUB.indexOf(c)).join(""))
+ .replace(/°/g,"*(pi/180)").replace(/∞/g,"Infinity")
+ .replace(/\|([^|]+)\|/g,"abs($1)")}
+
+function fixChains(s){
+ const groups=[];
+ const chainOne=p=>{const tk=p.split(/(<=|>=|==|!=|<|>)/);if(tk.length<=3)return p;const t=[];for(let i=0;i+2<tk.length;i+=2)t.push("("+tk[i]+tk[i+1]+tk[i+2]+")");return t.join(" and ")};
+ const chain=t=>t.split(/(\band\b|\bor\b|\bxor\b|\?|:|,|;)/).map((p,i)=>i%2?p:chainOne(p)).join("");
+ const proc=str=>{let out="",i=0;
+  while(i<str.length){const ch=str[i];
+   if("([{".includes(ch)){let d=0,j=i;for(;j<str.length;j++){const c=str[j];if("([{".includes(c))d++;else if(")]}".includes(c)){d--;if(d===0)break}}
+    if(j>=str.length){out+=str.slice(i);break}
+    const inner=proc(str.slice(i+1,j));groups.push(ch+inner+str[j]);out+="\u0001"+(groups.length-1)+"\u0002";i=j+1}
+   else{out+=ch;i++}}
+  return chain(out)};
+ let r=proc(s);
+ while(/\u0001\d+\u0002/.test(r))r=r.replace(/\u0001(\d+)\u0002/g,(m,k)=>groups[+k]);
+ return r}
+
+function isFnName(n,sc){if(KW.has(n))return true;if(Object.prototype.hasOwnProperty.call(sc,n))return typeof sc[n]==="function";return typeof math[n]==="function"}
+const fixCalls=(s,sc)=>s.replace(/([\p{L}_][\p{L}\p{N}_]*)(\s*)\(/gu,(m,n)=>isFnName(n,sc)?m:n+"*(");
+
+function prep(s,sc,main){
+ let t=s.trim();
+ if(main)t=t.replace(/^(?:[\p{L}_][\p{L}\p{N}_]*\s*\(\s*[\p{L}_][\p{L}\p{N}_]*\s*\)|y)\s*=(?!=)\s*/u,"");
+ const cs=parseCases(t);if(cs)t=buildPiecewise(cs);
+ t=norm(t);
+ t=t.replace(/(?<![<>=!])=(?!=)/g,"==");
+ t=fixChains(t);
+ return fixCalls(t,sc)}
+
+const fmt=v=>!isFinite(v)?String(v):(Math.abs(v)>=1e9||(Math.abs(v)<1e-6&&v!==0))?v.toExponential(8):(+v.toFixed(10)).toString();
+function ev(s,sc){const v=toNum(math.evaluate(prep(s,sc,false),Object.assign({},sc)));if(!isFinite(v))throw new Error("“"+s+"” is not a finite real number");return v}
+function showMsg(t,c){$("msg").innerHTML=t?`<div class="msg ${c}">${t}</div>`:""}
+const NAMERE=/^[\p{L}_][\p{L}\p{N}_]*$/u;
+
+function build(expr,consts,vn){
+ const sc=scopeBase();sc[vn]=0;
+ for(const part of splitTop(consts||"",/[,;\n]/)){if(!part.trim())continue;
+  const m=part.match(/^\s*([^=<>!]+?)\s*=(?!=)\s*([\s\S]+)$/);
+  if(!m)throw new Error("Bad constant definition: “"+part.trim()+"”. Use name=value (k=2) or a function g(t)=t^2.");
+  const name=m[1].trim();
+  if(/^[\p{L}_][\p{L}\p{N}_]*\s*\([^)]*\)$/u.test(name)){math.evaluate(name+"="+prep(m[2],sc,false),sc)}
+  else{if(!NAMERE.test(name))throw new Error("“"+name+"” is not a valid constant name.");
+   const v=toNum(math.evaluate(prep(m[2],sc,false),Object.assign({},sc)));
+   if(!isFinite(v))throw new Error("Constant “"+name+"” must be a finite real number.");sc[name]=v}}
+ const src=prep(expr,sc,true);
+ const code=math.compile(src);
+ const raw=x=>{sc[vn]=x;try{return toNum(code.evaluate(sc))}catch(_){return NaN}};
+ return{raw,probe(x){sc[vn]=x;return code.evaluate(sc)},sc,src}}
+
+/* ================= integrability check (unchanged logic) ================= */
+function checkIntegrable(raw,a,b){
+ const N=4001,xs=[],ys=[],w=b-a;
+ for(let i=0;i<N;i++){const x=a+w*i/(N-1);xs.push(x);ys.push(raw(x))}
+ const bad=[];ys.forEach((y,i)=>{if(!isFinite(y))bad.push(i)});
+ const notes=[];
+ let ndef=0;
+ for(const i of bad){
+  const iso=(i>0&&i<N-1)?isFinite(ys[i-1])&&isFinite(ys[i+1]):false;
+  const d=[1e-6,1e-8,1e-10].map(t=>raw(xs[i]+t*w)).concat([1e-6,1e-8].map(t=>raw(xs[i]-t*w)));
+  const near=d.filter(v=>isFinite(v));
+  const okNear=near.length>=2&&near.every(v=>Math.abs(v)<1e6);
+  const edge=(i==0||i==N-1)&&near.length>=2&&okNear;
+  if((iso&&okNear)||edge){ndef++;notes.push("f is undefined at x ≈ "+fmt(xs[i])+" but stays bounded nearby (removable gap) — filled with the nearby value.")}
+  else{
+   const big=near.some(v=>Math.abs(v)>=1e6)||[ys[i-1],ys[i+1]].some(v=>Math.abs(v)>1e3);
+   if(!isFinite(ys[i])&&(ys[i]===Infinity||ys[i]===-Infinity||big))return{ok:false,why:"f is unbounded (blows up to ±∞) near x ≈ "+fmt(xs[i])+". A Riemann-integrable function must be bounded on [a, b]."};
+   return{ok:false,why:"f is not defined as a real number at x ≈ "+fmt(xs[i])+(near.length?"":" (and on a whole part of [a, b])")+". It is undefined, non-real, or not covered by any piece of a piecewise definition. It must be defined and bounded on all of [a, b]."}
+  }
+ }
+ const mags=ys.map((y,i)=>[isFinite(y)?Math.abs(y):0,i]).sort((p,q)=>q[0]-p[0]);
+ if(mags[0][0]>1e8)return{ok:false,why:"f takes enormous values near x ≈ "+fmt(xs[mags[0][1]])+" — it is unbounded on [a, b]."};
+ const tops=[];for(const [m,i] of mags){if(tops.every(j=>Math.abs(j-i)>20))tops.push(i);if(tops.length>=6)break}
+ for(const i of tops){
+  const start=Math.abs(ys[i]);let c=xs[i],r=w/(N-1)*2,mx=start;
+  for(let it=0;it<14;it++){
+   let bx=c,bm=-1;const lo=Math.max(a,c-r),hi=Math.min(b,c+r);
+   for(let k=0;k<=40;k++){const x=lo+(hi-lo)*k/40,v=raw(x),m=isNaN(v)?0:isFinite(v)?Math.abs(v):Infinity;if(m>bm){bm=m;bx=x}}
+   mx=Math.max(mx,bm);c=bx;r/=5;
+   if(bm>1e7||!isFinite(bm))break;
+  }
+  if(mx>1e5&&mx>20*(start+1))return{ok:false,why:"f is unbounded near x ≈ "+fmt(c)+" (values grow without limit as x approaches it)."};
+ }
+ const fin=ys.filter(isFinite),rng=Math.max(...fin)-Math.min(...fin)||1;
+ const ds=[];for(let i=1;i<N;i++)if(isFinite(ys[i])&&isFinite(ys[i-1]))ds.push(Math.abs(ys[i]-ys[i-1]));
+ const med=ds.slice().sort((p,q)=>p-q)[Math.floor(ds.length/2)]||0;
+ const jumps=[];for(let i=1;i<N&&jumps.length<5;i++){const d=Math.abs(ys[i]-ys[i-1]);if(isFinite(d)&&d>0.1*rng&&d>30*med)jumps.push(fmt(xs[i]))}
+ if(jumps.length)notes.push("Jump discontinuities near x ≈ "+jumps.join(", ")+". A bounded function with finitely many jumps is still Riemann integrable.");
+ return{ok:true,notes,ys,xs};
+}
+
+/* ================= calculate ================= */
+function syncH(){try{const sc=scopeBase(),a=ev($("a").value,sc),b=ev($("b").value,sc),n=+$("n").value;if(n>0&&b>a)$("h").value=fmt((b-a)/n)}catch(_){}}
+["a","b","n"].forEach(i=>$(i).addEventListener("input",syncH));
+$("h").addEventListener("input",()=>{try{const sc=scopeBase(),a=ev($("a").value,sc),b=ev($("b").value,sc),h=ev($("h").value,sc);if(h>0&&b>a)$("n").value=Math.min(10000,Math.max(1,Math.round((b-a)/h)))}catch(_){}});
+
+const USERERR=/Undefined (symbol|function)|Too (few|many) arguments|is not a function/i;
+function friendly(msg){
+ let m=/Undefined symbol (.+)/.exec(msg);if(m)return"Unknown symbol “"+m[1]+"”. Define it in the Constants box (e.g. "+m[1]+"=2), or check the spelling of the function/constant name. Tip: write <code>k*x</code> or <code>k x</code>, not <code>kx</code>.";
+ m=/Undefined function (.+)/.exec(msg);if(m)return"Unknown function “"+m[1]+"”. Check the spelling, or pick it from the Functions tab.";
+ return msg}
+
+function calc(){
+ const res=$("res");res.style.display="none";
+ try{
+  if(!window.math)throw new Error("The math engine failed to load (check your internet connection and reload).");
+  const expr=$("fx").value.trim();if(!expr)throw new Error("Please enter a function f(x).");
+  const vn=$("vr").value.trim()||"x";if(!NAMERE.test(vn))throw new Error("Variable name “"+vn+"” is not valid (use a letter).");
+  const F=build(expr,$("cs").value,vn);
+  $("interp").textContent="Interpreted as: "+F.src;
+  const a=ev($("a").value,F.sc),b=ev($("b").value,F.sc);let n=Math.floor(+$("n").value);
+  if(!(b>a))throw new Error("Need a < b (currently a = "+fmt(a)+", b = "+fmt(b)+").");
+  if(!(n>=1&&n<=10000))throw new Error("n must be a whole number from 1 to 10000.");
+  for(let i=0;i<=20;i++){try{F.probe(a+(b-a)*i/20)}catch(e){if(e.user||USERERR.test(e.message))throw e}}
+  const chk=checkIntegrable(F.raw,a,b);
+  if(!chk.ok){showMsg("<b>✗ Not Riemann integrable on ["+fmt(a)+", "+fmt(b)+"] — Riemann sum not possible.</b><br>"+chk.why,"bad");return}
+  const eps=(b-a)*1e-9;
+  const f=x=>{let v=F.raw(x);if(isFinite(v))return v;for(const d of[eps,-eps,eps*100,-eps*100]){v=F.raw(x+d);if(isFinite(v))return v}return NaN};
+  const h=(b-a)/n,k=Math.max(4,Math.min(200,Math.floor(200000/n)));
+  let L=0,U=0;const rows=[];
+  for(let i=0;i<n;i++){
+   const x0=a+i*h,x1=i==n-1?b:a+(i+1)*h;let mn=Infinity,mx=-Infinity;
+   for(let j=0;j<=k;j++){const v=f(x0+(x1-x0)*j/k);if(v<mn)mn=v;if(v>mx)mx=v}
+   if(!isFinite(mn)||!isFinite(mx))throw new Error("Could not evaluate f on subinterval "+(i+1)+".");
+   L+=mn*h;U+=mx*h;rows.push([i+1,x0,x1,mn,mx])
+  }
+  const mode=document.querySelector("input[name=m]:checked").value;
+  const st=[["h = (b−a)/n",fmt(h),"n = "+n]];
+  if(mode!="upper")st.push(["Lower sum L(f,P)",fmt(L),"Σ mᵢ·h"]);
+  if(mode!="lower")st.push(["Upper sum U(f,P)",fmt(U),"Σ Mᵢ·h"]);
+  if(mode=="both")st.push(["U − L",fmt(U-L),"→ 0 as n grows for integrable f"]);
+  $("stats").innerHTML=st.map(s=>`<div class="stat"><span>${s[0]}</span><b>${s[1]}</b><span>${s[2]}</span></div>`).join("");
+  let m="<b>✓ f is bounded and has only negligible discontinuities — Riemann integrable on ["+fmt(a)+", "+fmt(b)+"].</b>";
+  m+=chk.notes.length?"<br>"+chk.notes.join("<br>"):"";
+  showMsg(m,chk.notes.length?"warn":"ok");
+  const show=rows.slice(0,200);
+  $("tbl").innerHTML="<table><tr><th>i</th><th>xᵢ₋₁</th><th>xᵢ</th><th>mᵢ (inf)</th><th>Mᵢ (sup)</th>"+(mode!="upper"?"<th>mᵢ·h</th>":"")+(mode!="lower"?"<th>Mᵢ·h</th>":"")+"</tr>"+
+   show.map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}</td><td>${fmt(r[2])}</td><td>${fmt(r[3])}</td><td>${fmt(r[4])}</td>${mode!="upper"?"<td>"+fmt(r[3]*h)+"</td>":""}${mode!="lower"?"<td>"+fmt(r[4]*h)+"</td>":""}</tr>`).join("")+"</table>"+(rows.length>200?`<p class="note">Showing first 200 of ${n} rows.</p>`:"");
+  res.style.display="block";
+  draw(f,a,b,rows,h,mode);
+  $("leg").innerHTML="Min/max on each subinterval are found by dense sampling ("+(k+1)+" points per piece), so results are accurate to numerical precision for ordinary functions.";
+ }catch(err){
+  const t=friendly(String(err.message||err).replace(/</g,"&lt;"));
+  showMsg("<b>Input error:</b> "+t,"bad");
+ }
+}
+
+function draw(f,a,b,rows,h,mode){
+ const cv=$("cv"),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
+ cv.width=W*dpr;cv.height=H*dpr;const c=cv.getContext("2d");c.scale(dpr,dpr);
+ const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+ let lo=0,hi=0;const pts=[];
+ for(let i=0;i<=600;i++){const x=a+(b-a)*i/600,y=f(x);pts.push([x,y]);if(isFinite(y)){lo=Math.min(lo,y);hi=Math.max(hi,y)}}
+ rows.forEach(r=>{lo=Math.min(lo,r[3]);hi=Math.max(hi,r[4])});
+ if(hi==lo){hi+=1;lo-=1}const pad=(hi-lo)*.08;lo-=pad;hi+=pad;
+ const m=34,X=x=>m+(x-a)/(b-a)*(W-m-10),Y=y=>H-m-(y-lo)/(hi-lo)*(H-m-10);
+ c.clearRect(0,0,W,H);c.font="11px system-ui";c.fillStyle=css("--mu");c.strokeStyle=css("--bd");c.lineWidth=1;
+ for(let i=0;i<=4;i++){const y=lo+(hi-lo)*i/4;c.beginPath();c.moveTo(m,Y(y));c.lineTo(W-10,Y(y));c.stroke();c.fillText(fmt(+y.toPrecision(3)),2,Y(y)+4)}
+ for(let i=0;i<=4;i++){const x=a+(b-a)*i/4;c.fillText(fmt(+x.toPrecision(3)),X(x)-10,H-m+16)}
+ c.strokeStyle=css("--mu");c.beginPath();c.moveTo(m,Y(0));c.lineTo(W-10,Y(0));c.stroke();
+ const lc=css("--lo"),uc=css("--up"),dr=(col,idx,fill)=>{c.fillStyle=col;c.strokeStyle=col;rows.forEach(r=>{const x0=X(r[1]),x1=X(r[2]),y=Y(r[idx]),z=Y(0);
+  c.globalAlpha=fill;c.fillRect(x0,Math.min(y,z),x1-x0,Math.abs(z-y));c.globalAlpha=.9;c.strokeRect(x0,Math.min(y,z),x1-x0,Math.abs(z-y))});c.globalAlpha=1};
+ if(mode!="lower")dr(uc,4,.14);if(mode!="upper")dr(lc,3,.25);
+ c.strokeStyle=css("--tx");c.lineWidth=2;c.beginPath();let pen=false;
+ pts.forEach(([x,y])=>{if(!isFinite(y)){pen=false;return}pen?c.lineTo(X(x),Y(y)):c.moveTo(X(x),Y(y));pen=true});c.stroke();
+}
+
+/* ================= keyboard ================= */
+let tgt=$("fx"),reg=[],cur="123",shift=false;
+document.addEventListener("focusin",e=>{if(e.target.classList&&e.target.classList.contains("kb"))tgt=e.target});
+const fire=el=>el.dispatchEvent(new Event("input",{bubbles:true}));
+function setCaret(el,a,b){el.focus();try{el.setSelectionRange(a,b===undefined?a:b)}catch(_){}}
+function ins(text,sp){
+ if(!tgt.isConnected)tgt=$("fx");
+ const el=tgt,v=el.value,p=el.selectionStart??v.length,q=el.selectionEnd??p;
+ let s=text,a=-1,b=-1;const i=s.indexOf("‹");
+ if(i>=0){const j=s.indexOf("›");s=s.slice(0,i)+s.slice(i+1,j)+s.slice(j+1);a=i;b=j-1}
+ if(sp&&p>0&&/\p{L}/u.test(v[p-1])&&/^[\p{L}(]/u.test(s)){s=" "+s;if(a>=0){a++;b++}}
+ el.value=v.slice(0,p)+s+v.slice(q);
+ const A=a>=0?p+a:p+s.length,B=a>=0?p+b:A;
+ setCaret(el,A,B);fire(el)}
+function bsp(){if(!tgt.isConnected)tgt=$("fx");const el=tgt,v=el.value,p=el.selectionStart??v.length,q=el.selectionEnd??p;
+ if(p!==q){el.value=v.slice(0,p)+v.slice(q);setCaret(el,p)}else if(p>0){el.value=v.slice(0,p-1)+v.slice(p);setCaret(el,p-1)}fire(el)}
+function mv(d){if(!tgt.isConnected)tgt=$("fx");const el=tgt,p=d<0?el.selectionStart:el.selectionEnd;const np=Math.max(0,Math.min(el.value.length,p+d));setCaret(el,np)}
+
+function K(l,t,o){o=o||{};reg.push({t,sp:o.sp});return`<button type="button" data-i="${reg.length-1}" class="${o.c||""}" title="${esc(o.tip||t.replace(/[‹›]/g,""))}">${o.h?l:esc(l)}</button>`}
+const A=(l,a,c)=>`<button type="button" data-a="${a}" class="${c||""}">${l}</button>`;
+const sec=(t,items)=>`<div class="sec">${t}</div><div class="kr">${items.join("")}</div>`;
+const fnk=(n,tip)=>K(n,n+"(‹›)",{sp:1,tip:tip||n});
+
+function pBasic(){return`<div class="kb3">
+<div class="pad4">${K("x","x",{c:"it",sp:1})}${K("y","y",{c:"it",sp:1})}${K("z","z",{c:"it",sp:1})}${K("a<sup>b</sup>","^",{h:1,tip:"power ^"})}
+${K("(","(")}${K(")",")")}${K("<","<")}${K(">",">")}
+${K("|a|","abs(‹›)",{sp:1,tip:"absolute value"})}${K(",",",")}${K("≤","≤")}${K("≥","≥")}
+${A("A B C","tab:ABC","grey s2")}${K("√","√(‹›)",{sp:1,tip:"square root"})}${K("π","π",{sp:1})}</div>
+<div class="pad4">${["7","8","9"].map(d=>K(d,d,{c:"grey"})).join("")}${K("÷","÷")}
+${["4","5","6"].map(d=>K(d,d,{c:"grey"})).join("")}${K("×","×")}
+${["1","2","3"].map(d=>K(d,d,{c:"grey"})).join("")}${K("−","−")}
+${K("0","0",{c:"grey"})}${K(".",".",{c:"grey"})}${K("=","=")}${K("+","+")}</div>
+<div class="padr">${A("functions","tab:Functions","grey s2")}${A("←","left","grey")}${A("→","right","grey")}${A("⌫","back","grey s2")}${A("↵","enter","act s2")}</div></div>
+${sec("More",[K("[","["),K("]","]"),K("{","{"),K("}","}"),K(";",";"),K("?"," ? "),K(":"," : "),K("!","!",{tip:"factorial"}),K("%","%",{tip:"mod"}),K("x²","^2",{tip:"square"}),K("x³","^3"),K("x⁻¹","^(-1)"),K("ⁿ√","nthRoot(‹x›, ‹n›)",{sp:1}),K("e","e",{c:"it",sp:1,tip:"Euler's number"}),K("°","°",{tip:"degrees"}),K("∞","∞"),K("space"," "),A("clear","clear","grey")])}`}
+
+function pABC(){const rows=["qwertyuiop","asdfghjkl","zxcvbnm"];const cs=ch=>shift?ch.toUpperCase():ch;
+ const L=(ch)=>K(cs(ch),cs(ch),{c:"it"});
+ return`<div class="qw">${[...rows[0]].map(L).join("")}</div>
+<div class="qw">${[...rows[1]].map(L).join("")}${K("θ","θ",{c:"it"})}</div>
+<div class="qw">${A("⬆","shift",(shift?"act":"grey")+" w")}${[...rows[2]].map(L).join("")}${A("⌫","back","grey w")}</div>
+<div class="qw">${A("1 2 3","tab:123","grey w")}${K("a_b","_",{tip:"subscript / underscore"})}${K("!","!")}${K("'","'")}${K("[ ]","[‹›]")}${K("{ }","{‹›}")}${K("~","~")}${K("%","%")}${K(":",":")}${K(";",";")}${K(",",",")}${A("↵","enter","act w")}</div>`}
+
+function pGreek(){const lo="αβγδεζηθικλμνξοπρστυφχψω",up="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ",va="ϵϑϰϖϱςϕ";
+ return sec("Lowercase Greek",[...lo].map(c=>K(c,c,{c:"it",sp:c==="π"?1:0})))+sec("Uppercase Greek",[...up].map(c=>K(c,c,{c:"it"})))+sec("Variant forms",[...va].map(c=>K(c,c,{c:"it"})))+
+ `<p class="note">Any Greek letter works as a parameter — define it in the Constants box, e.g. <code>α=0.5, λ=3</code>. Note π means 3.14159…; Σ(…) and Π(…) with brackets mean sum and product.</p>`}
+
+function pFunc(){
+ const inv=[["sin⁻¹","asin"],["cos⁻¹","acos"],["tan⁻¹","atan"],["csc⁻¹","acsc"],["sec⁻¹","asec"],["cot⁻¹","acot"]];
+ const invh=[["sinh⁻¹","asinh"],["cosh⁻¹","acosh"],["tanh⁻¹","atanh"],["csch⁻¹","acsch"],["sech⁻¹","asech"],["coth⁻¹","acoth"]];
+ return[
+ sec("Trig functions",["sin","cos","tan","csc","sec","cot"].map(n=>fnk(n))),
+ sec("Inverse trig functions",inv.map(([l,n])=>K(l,n+"(‹›)",{sp:1,tip:n})).concat(K("atan2","atan2(‹y›, ‹x›)",{sp:1}))),
+ sec("Hyperbolic trig functions",["sinh","cosh","tanh","csch","sech","coth"].map(n=>fnk(n))),
+ sec("Inverse hyperbolic",invh.map(([l,n])=>K(l,n+"(‹›)",{sp:1,tip:n}))),
+ sec("Exponential, logs & roots",[fnk("exp"),fnk("ln","natural log"),fnk("log","log base 10"),K("logₐ","log(‹x›, ‹a›)",{sp:1,tip:"log of x in base a"}),fnk("log2"),fnk("expm1"),fnk("log1p"),fnk("sqrt"),fnk("cbrt"),K("ⁿ√","nthRoot(‹x›, ‹n›)",{sp:1}),K("hypot","hypot(‹a›, ‹b›)",{sp:1})]),
+ sec("Calculus & big operators",[K("d/dx","D(‹sin(t^2)›, t, x)",{sp:1,tip:"derivative of the expression in t, evaluated at x"}),K("f″","D2(‹t^3›, t, x)",{sp:1,tip:"second derivative"}),K("∫","∫(‹t^2›, t, 0, x)",{tip:"definite integral"}),K("Σ","∑(‹k^2›, k, 1, 5)",{tip:"summation"}),K("Π","∏(‹k›, k, 1, 5)",{tip:"product"}),K("lim","Lim(‹sin(t)/t›, t, 0)",{sp:1,tip:"two-sided limit"})]),
+ sec("Rounding & numbers",[fnk("floor"),fnk("ceil"),fnk("round"),fnk("fix","truncate"),fnk("abs"),fnk("sign"),fnk("frac","fractional part"),K("mod","mod(‹a›, ‹b›)",{sp:1}),K("gcd","gcd(‹a›, ‹b›)",{sp:1}),K("lcm","lcm(‹a›, ‹b›)",{sp:1}),K("n!","!",{tip:"factorial"}),fnk("factorial"),fnk("gamma","Γ(x)"),K("B","beta(‹a›, ‹b›)",{sp:1,tip:"beta function"}),fnk("erf"),fnk("erfc"),K("nCr","combinations(‹n›, ‹k›)",{sp:1}),K("nPr","permutations(‹n›, ‹k›)",{sp:1}),fnk("cube"),fnk("square")]),
+ sec("Statistics",[K("mean","mean(‹a›, ‹b›, ‹c›)",{sp:1}),K("median","median(‹a›, ‹b›, ‹c›)",{sp:1}),K("min","min(‹a›, ‹b›)",{sp:1}),K("max","max(‹a›, ‹b›)",{sp:1}),K("std","std(‹a›, ‹b›, ‹c›)",{sp:1}),K("variance","variance(‹a›, ‹b›, ‹c›)",{sp:1}),K("mad","mad(‹a›, ‹b›, ‹c›)",{sp:1}),K("sum","sum(‹a›, ‹b›, ‹c›)",{sp:1}),K("prod","prod(‹a›, ‹b›, ‹c›)",{sp:1})]),
+ sec("Step & signal functions",[fnk("H","Heaviside step: 0 for x<0, 1 for x≥0"),fnk("rect","rectangle pulse"),fnk("tri","triangle pulse"),fnk("sinc","sin(πx)/(πx)"),K("clamp","clamp(‹x›, ‹lo›, ‹hi›)",{sp:1})])].join("")}
+
+function pLogic(){return[
+ sec("Inequalities & equality",["<",">","≤","≥","=","≠"].map(s=>K(s,s)).concat(K("==","=="),K("!=","!="))),
+ sec("Logic",[K("and"," and "),K("or"," or "),K("not","not "),K("xor"," xor "),K("∧","∧"),K("∨","∨"),K("¬","¬"),K("true","true"),K("false","false")]),
+ sec("Conditional (piecewise on one line)",[K("c ? a : b","(‹cond›) ? ‹a› : ‹b›",{tip:"if cond then a else b"}),K("?"," ? "),K(":"," : ")]),
+ sec("Ranges & intervals",[K("a < x < b","‹0› < x < 1"),K("a ≤ x ≤ b","‹0› <= x <= 1"),K("a ≤ x < b","‹0› <= x < 1"),K("a < x ≤ b","‹0› < x <= 1"),K("x ∈ [a, b]","x ∈ [‹0›, 1]"),K("x ∈ (a, b)","x ∈ (‹0›, 1)"),K("x ∈ [a, b)","x ∈ [‹0›, 1)"),K("x ∈ (a, b]","x ∈ (‹0›, 1]"),K("∈","∈")]),
+ sec("Number tests",[fnk("isInteger"),fnk("isPositive"),fnk("isNegative"),fnk("isZero"),fnk("isPrime"),K("%","%",{tip:"remainder"}),K("mod","mod(‹a›, ‹b›)",{sp:1})]),
+ `<p class="note">Conditions also work inside the <b>Piecewise</b> tab: <code>x &lt; 0</code>, <code>0 ≤ x &lt; 1</code>, <code>x ∈ [1, 2)</code>, <code>x &gt; 0 and mod(x, 2) &lt; 1</code>.</p>`].join("")}
+
+function pSym(){return[
+ sec("Arithmetic",["+","−","×","÷","·","^","!","%"].map(s=>K(s,s)).concat(K("√","√(‹›)"),K("∛","∛(‹›)"),K("°","°"),K("∞","∞"))),
+ sec("Superscripts",[..."⁰¹²³⁴⁵⁶⁷⁸⁹⁻"].map(s=>K(s,s))),
+ sec("Subscripts",[..."₀₁₂₃₄₅₆₇₈₉"].map(s=>K(s,s))),
+ sec("Brackets",["(",")","[","]","{","}"].map(s=>K(s,s)).concat(K("|a|","|‹›|"),K("⌊x⌋","⌊‹›⌋"),K("⌈x⌉","⌈‹›⌉"))),
+ sec("Big operators",[K("∑","∑(‹k^2›, k, 1, 5)"),K("∏","∏(‹k›, k, 1, 5)"),K("∫","∫(‹t^2›, t, 0, x)"),K("∂","∂(‹t^3›, t, x)",{tip:"derivative at a point"})]),
+ sec("Constants",[K("π","π",{sp:1}),K("e","e",{c:"it",sp:1}),K("τ","tau",{sp:1,tip:"2π"}),K("φ","phi",{sp:1,tip:"golden ratio"}),K("∞","∞")]),
+ sec("Relations & logic",["<",">","≤","≥","=","≠","≡","∈","∧","∨","¬","⊻"].map(s=>K(s,s))),
+ sec("Punctuation",[",",";",":","?",".","_","'"," "].map(s=>K(s===" "?"space":s,s)))].join("")}
+
+const PW={rows:[{e:"x^2",c:"x<1"},{e:"2",c:"1<=x<2"}],o:"4-x"};
+const PRESETS=[["|x|",[["-x","x<0"],["x","x>=0"]],""],["Heaviside",[["0","x<0"],["1","x>=0"]],""],["Ramp",[["0","x<1"],["x-1","x>=1"]],""],["Tent",[["x","0<=x<1"],["2-x","1<=x<2"]],"0"],["Stairs",[["1","x<1"],["2","1<=x<2"]],"3"],["Parabola+line",[["x^2","x<1"],["2*x-1","x>=1"]],""]];
+function pPiece(){return`<div class="sec">Piecewise definition — each row is “expression if condition”</div>
+${PW.rows.map((r,i)=>`<div class="pwrow"><input type="text" class="kb" data-pw="e" data-r="${i}" value="${esc(r.e)}" placeholder="expression, e.g. x^2" autocomplete="off" spellcheck="false"><span>if</span><input type="text" class="kb" data-pw="c" data-r="${i}" value="${esc(r.c)}" placeholder="condition, e.g. x &lt; 1" autocomplete="off" spellcheck="false"><button type="button" data-a="pwdel:${i}" class="grey">✕</button></div>`).join("")}
+<div class="pwrow"><input type="text" class="kb" data-pw="o" value="${esc(PW.o)}" placeholder="optional, e.g. 0" autocomplete="off" spellcheck="false"><span>otherwise</span></div>
+<div class="kr" style="margin:8px 0">${A("+ add piece","pwadd","grey")}${A("Use as f(x)","pwapply","act")}${A("Load from f(x)","pwload","grey")}${A("clear","pwclear","grey")}</div>
+${sec("Presets",PRESETS.map((p,i)=>A(p[0],"pwpreset:"+i,"grey")))}
+${sec("Insert into the focused box",[K("x","x",{c:"it",sp:1}),K("<","<"),K(">",">"),K("≤","≤"),K("≥","≥"),K("≠","≠"),K("and"," and "),K("or"," or "),K("a<x<b","‹0› < x < 1"),K("x ∈ [a,b)","x ∈ [‹0›, 1)"),K("(","("),K(")",")"),K("^","^"),K("√","√(‹›)"),K("π","π",{sp:1}),K("abs","abs(‹›)",{sp:1}),K("sin","sin(‹›)",{sp:1}),K("cos","cos(‹›)",{sp:1}),K("ln","ln(‹›)",{sp:1}),K("exp","exp(‹›)",{sp:1})])}
+<p class="note">Pieces are tried top to bottom; the first true condition wins. If a point matches no piece and there is no “otherwise”, f is undefined there and the integrability check will say so.</p>`}
+
+const TABS=["123","ABC","Greek","Functions","Logic","Symbols","Piecewise"];
+function render(){reg=[];if(!tgt.isConnected)tgt=$("fx");
+ const h={"123":pBasic,ABC:pABC,Greek:pGreek,Functions:pFunc,Logic:pLogic,Symbols:pSym,Piecewise:pPiece}[cur]();
+ $("tabs").innerHTML=TABS.map(k=>`<button type="button" class="tab ${k==cur?"on":""}" data-k="${k}">${k}</button>`).join("");
+ $("keys").innerHTML=h}
+function pwText(){const parts=PW.rows.filter(r=>r.e.trim()&&r.c.trim()).map(r=>r.e.trim()+" if "+r.c.trim());if(PW.o.trim())parts.push(PW.o.trim()+" otherwise");
+ return parts.length?"{ "+parts.join("; ")+" }":""}
+function pwApply(){const t=pwText();if(!t){showMsg("<b>Piecewise:</b> fill in at least one “expression if condition” row.","bad");return false}$("fx").value=t;return true}
+function act(a){
+ if(a.startsWith("tab:")){cur=a.slice(4);render();return}
+ if(a.startsWith("pwdel:")){PW.rows.splice(+a.slice(6),1);render();return}
+ if(a.startsWith("pwpreset:")){const p=PRESETS[+a.slice(9)];PW.rows=p[1].map(r=>({e:r[0],c:r[1]}));PW.o=p[2];render();pwApply();return}
+ switch(a){
+  case"back":bsp();break;case"left":mv(-1);break;case"right":mv(1);break;
+  case"clear":if(!tgt.isConnected)tgt=$("fx");tgt.value="";setCaret(tgt,0);fire(tgt);break;
+  case"enter":calc();break;
+  case"shift":shift=!shift;render();break;
+  case"pwadd":PW.rows.push({e:"",c:""});render();break;
+  case"pwclear":PW.rows=[{e:"",c:""}];PW.o="";render();break;
+  case"pwapply":if(pwApply())calc();break;
+  case"pwload":try{const cs=parseCases($("fx").value);if(!cs){showMsg("<b>Piecewise:</b> f(x) is not written as <code>{ expr if cond; expr otherwise }</code>.","bad");break}
+   PW.rows=cs.filter(c=>c.c!==null).map(c=>({e:c.e,c:c.c}));const o=cs.find(c=>c.c===null);PW.o=o?o.e:"";if(!PW.rows.length)PW.rows=[{e:"",c:""}];render();showMsg("","")}catch(e){showMsg("<b>Input error:</b> "+esc(e.message),"bad")}break}}
+$("tabs").addEventListener("click",e=>{const k=e.target.dataset.k;if(k){cur=k;render()}});
+$("keys").addEventListener("mousedown",e=>{if(e.target.closest("button"))e.preventDefault()});
+$("keys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.i!=null){const k=reg[+b.dataset.i];ins(k.t,k.sp);if(shift&&cur==="ABC"){shift=false;render()}}
+ else if(b.dataset.a)act(b.dataset.a)});
+$("keys").addEventListener("input",e=>{const t=e.target,k=t.dataset&&t.dataset.pw;if(!k)return;if(k==="o")PW.o=t.value;else PW.rows[+t.dataset.r][k]=t.value});
+document.addEventListener("keydown",e=>{if(e.key!=="Enter")return;const t=e.target;
+ if((t.classList&&t.classList.contains("kb"))||t.id==="n"){e.preventDefault();if(t.dataset&&t.dataset.pw)pwApply();calc()}});
+let hide=false;$("dk").onclick=()=>{hide=!hide;document.querySelectorAll("input.kb").forEach(i=>i.setAttribute("inputmode",hide?"none":"text"));$("dk").textContent="⌨ Hide phone keyboard: "+(hide?"on":"off")};
+render();
+
+/* ================= examples ================= */
+const EX=[["Choose an example…"],
+["sin(x) + x²  on [0, π]","sin(x) + x^2","0","pi",10,"",""],
+["Piecewise: x² | 2 | 4 − x","{ x^2 if x<1; 2 if 1<=x<2; 4-x otherwise }","0","3",12,"",""],
+["Piecewise with intervals ∈","{ x^2 if x ∈ [0,1); 3-x if x ∈ [1,3]; 0 otherwise }","0","3",12,"",""],
+["Absolute value |x − 1|","|x-1|","-1","3",8,"",""],
+["Floor ⌊x⌋ (jumps)","⌊x⌋","0","5",5,"",""],
+["Taylor sum  Σ xᵏ/k!","∑(x^k/factorial(k), k, 0, 6)","0","2",8,"",""],
+["Product  Π (1 + x/k)","∏(1 + x/k, k, 1, 4)","0","2",8,"",""],
+["Derivative  d/dx sin(t²)","D(sin(t^2), t, x)","0","3",12,"",""],
+["Parameters k, α","k*x^2 + α","0","2",10,"k=2, α=0.5",""],
+["Helper function g(t)","g(x) + 1","0","2",10,"g(t)=t^2",""],
+["sin(x)/x (removable gap)","sin(x)/x","0","4*pi",20,"",""],
+["1/x on [0,1] (not integrable)","1/x","0","1",10,"",""],
+["Ternary  x<1 ? x : 2","x<1 ? x : 2","0","2",10,"",""],
+["Triangle + rectangle pulses","tri(x-1) + rect(x-2.5)","0","4",16,"",""]];
+$("ex").innerHTML=EX.map((e,i)=>`<option value="${i}">${esc(e[0])}</option>`).join("");
+$("ex").onchange=()=>{const e=EX[+$("ex").value];if(!e[1])return;$("fx").value=e[1];$("a").value=e[2];$("b").value=e[3];$("n").value=e[4];$("cs").value=e[5];$("vr").value="x";syncH();calc()};
+
+syncH();
+document.querySelectorAll("input[name=m]").forEach(r=>r.onchange=()=>{if($("res").style.display=="block")calc()});
+$("go").onclick=calc;
+window.addEventListener("resize",()=>{if($("res").style.display=="block")calc()});
+window.addEventListener("load",calc);
+</script><script>
+/* Theme sync: the portfolio page tells this calculator whether it is light or dark. */
+addEventListener('message', function (e) {
+  if (e.source !== window.parent) return;
+  var d = e.data;
+  if (d && d.type === 'plotline-theme' && (d.theme === 'light' || d.theme === 'dark'))
+    document.documentElement.setAttribute('data-theme', d.theme);
+});
+/* redraw the chart when the theme changes */
+new MutationObserver(function () {
+  try { if (document.getElementById('res').style.display == 'block') calc(); } catch (e) {}
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+/* when embedded, tell the page how tall this content is so the frame fits exactly */
+if (self !== top && 'ResizeObserver' in window) {
+  var wrapEl = document.querySelector('.wrap');
+  var report = function () { try { parent.postMessage({ type: 'plotline-height', height: Math.ceil(wrapEl.getBoundingClientRect().height) + 2 }, '*'); } catch (e) {} };
+  new ResizeObserver(report).observe(wrapEl);
+  addEventListener('load', report);
+}
+</script>
+</body></html>
