@@ -100,7 +100,7 @@
     f.addEventListener('mouseenter', () => cur.classList.add('hide'));
     f.addEventListener('mouseleave', () => cur.classList.remove('hide'));
     // Calculators capture wheel/touch gestures, which would trap page scrolling: keep them locked until tapped.
-    if (!wrap.classList.contains('auto')) {
+    if (!wrap.classList.contains('auto') || wrap.classList.contains('lock')) {
       const body = f.closest('.lab-body');
       const lock = document.createElement('button'); lock.type = 'button'; lock.className = 'lab-lock';
       lock.setAttribute('aria-label', 'Activate this calculator');

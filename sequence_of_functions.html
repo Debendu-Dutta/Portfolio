@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Sequence of Functions</title>
+<script>try{var s=localStorage.getItem("theme"),e=self!==top;if(s==="light"||s==="dark"||e)document.documentElement.setAttribute("data-theme",s==="light"?"light":"dark")}catch(x){}</script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.1/math.min.js"></script>
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f6f7fb;--card:#fff;--tx:#1b1f2a;--mu:#6a7285;--bd:#dde1ea;--ac:#3b6cf6;--lo:#3b6cf6;--up:#f08a24;--ok:#13804a;--bad:#c62f3a;--key:#eef1f8;--key2:#d5d9e2}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#12151c;--card:#1b2029;--tx:#e8ebf3;--mu:#9aa3b8;--bd:#2c3340;--ac:#6f94ff;--lo:#6f94ff;--up:#ffa24d;--ok:#4cd08a;--bad:#ff6b74;--key:#252b37;--key2:#343b4a}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#12151c;--card:#1b2029;--tx:#e8ebf3;--mu:#9aa3b8;--bd:#2c3340;--ac:#6f94ff;--lo:#6f94ff;--up:#ffa24d;--ok:#4cd08a;--bad:#ff6b74;--key:#252b37;--key2:#343b4a}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:980px;margin:0 auto;padding:18px 14px 40px}
+h1{font-size:24px;margin:4px 0}.sub{color:var(--mu);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:14px}
+label{font-size:12px;color:var(--mu);display:block;margin-bottom:3px;font-weight:600}
+input[type=text],input[type=number],select{width:100%;padding:10px 12px;border:1px solid var(--bd);border-radius:9px;background:var(--bg);color:var(--tx);font:16px ui-monospace,Menlo,Consolas,monospace}
+select{font-family:system-ui,sans-serif;font-size:14px}
+input:focus,select:focus{outline:2px solid var(--ac);border-color:transparent}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:12px}
+.grid2{display:grid;grid-template-columns:130px 1fr;gap:10px;margin-top:12px}
+@media(max-width:640px){.grid{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+.toprow{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap}.toprow>div{flex:1 1 200px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0 8px}
+.tab{padding:5px 11px;border:1px solid var(--bd);background:transparent;color:var(--mu);border-radius:20px;cursor:pointer;font-size:13px}
+.tab.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+#keys button{min-width:44px;padding:8px 9px;border:1px solid var(--bd);background:var(--key);color:var(--tx);border-radius:8px;cursor:pointer;font:15px ui-monospace,Menlo,Consolas,"Times New Roman",serif}
+#keys button:active{transform:scale(.95)}
+#keys button.it{font-family:"Times New Roman",Georgia,serif;font-style:italic;font-size:17px}
+#keys button.grey{background:var(--key2)}
+#keys button.act{background:var(--ac);color:#fff;border-color:var(--ac)}
+#keys button.s2{grid-column:span 2}
+.kr{display:flex;flex-wrap:wrap;gap:6px}
+.sec{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--mu);margin:12px 0 6px;text-transform:uppercase}
+.sec:first-child{margin-top:2px}
+.kb3{display:flex;flex-wrap:wrap;gap:16px;justify-content:center}
+.pad4{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;flex:1 1 230px;max-width:300px}
+.padr{display:grid;grid-template-columns:1fr 1fr;gap:6px;flex:1 1 170px;max-width:230px;align-content:start}
+.pad4 button,.padr button{min-width:0!important}
+.qw{display:flex;gap:6px;justify-content:center;margin-bottom:6px}.qw button{flex:1 1 0;min-width:0!important;max-width:60px}
+.qw .w{flex:1.6 1 0;max-width:96px}
+.pwrow{display:flex;gap:6px;align-items:center;margin-bottom:6px;flex-wrap:wrap}
+.pwrow input{flex:1 1 170px;width:auto}.pwrow span{color:var(--mu);font-size:13px}
+.modes{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.modes label{display:flex;align-items:center;gap:6px;padding:8px 12px;border:1px solid var(--bd);border-radius:9px;cursor:pointer;color:var(--tx);font-size:14px;margin:0}
+.go{margin-top:14px;width:100%;padding:12px;border:0;border-radius:10px;background:var(--ac);color:#fff;font-size:16px;font-weight:700;cursor:pointer}
+.msg{padding:12px 14px;border-radius:10px;margin-bottom:14px;border:1px solid}
+.msg.bad{border-color:var(--bad);color:var(--bad)}.msg.ok{border-color:var(--ok);color:var(--ok)}.msg.warn{border-color:var(--up);color:var(--up)}
+.res{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
+.stat{border:1px solid var(--bd);border-radius:10px;padding:10px 12px}.stat b{display:block;font-size:20px;font-family:ui-monospace,Menlo,monospace;word-break:break-all}.stat span{font-size:12px;color:var(--mu)}
+canvas{width:100%;height:340px;display:block}
+.sc{overflow-x:auto;max-height:360px;overflow-y:auto}
+table{border-collapse:collapse;width:100%;font:13px ui-monospace,Menlo,monospace}
+th,td{padding:5px 9px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th{position:sticky;top:0;background:var(--card);color:var(--mu)}
+.note{font-size:13px;color:var(--mu)}
+#interp{font:12px ui-monospace,Menlo,monospace;color:var(--mu);margin:8px 0 0;word-break:break-all}
+details{margin-top:12px;font-size:13px;color:var(--mu)}summary{cursor:pointer;font-weight:600;color:var(--tx)}
+details ul{margin:8px 0 0;padding-left:18px}details li{margin:4px 0}
+code{background:var(--key);padding:1px 5px;border-radius:5px;font-size:12px}
+.tools{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
+.tools button{padding:5px 11px;border:1px solid var(--bd);background:transparent;color:var(--mu);border-radius:20px;cursor:pointer;font-size:12px}
+#res{display:none}
+
+html,body{height:100%}
+.wrap.app{max-width:none;margin:0;padding:0;display:grid;grid-template-columns:min(420px,42vw) 1fr;height:100vh;overflow:hidden}
+.emb .wrap.app{height:780px}
+.side{overflow:auto;border-right:1px solid var(--bd);background:var(--card);min-width:0;display:flex;flex-direction:column}
+.plot{position:relative;min-width:0;background:var(--card);overflow:hidden}
+.plot canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none;cursor:grab}
+.fab{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+.fab button{width:38px;height:38px;border-radius:8px;border:1px solid var(--bd);background:var(--card);color:var(--tx);font-size:19px;cursor:pointer;box-shadow:0 1px 4px rgba(0,0,0,.18)}
+#ro{position:absolute;left:10px;bottom:8px;font:12px ui-monospace,Menlo,monospace;color:var(--mu);background:var(--card);padding:2px 6px;border-radius:6px;pointer-events:none}
+.hdr{padding:12px 14px;border-bottom:1px solid var(--bd);font-weight:700;font-size:16px}
+.xr{display:flex;gap:10px;padding:10px 12px;border-bottom:1px solid var(--bd);align-items:flex-start}
+.xr>div{flex:1;min-width:0}
+.bd{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;color:#fff;font:600 13px system-ui;flex:none;margin-top:4px}
+.row{display:flex;gap:8px;align-items:center}
+.row input[type=text]{flex:1;min-width:0}
+.ib{padding:8px 10px;border:1px solid var(--bd);background:var(--key);color:var(--tx);border-radius:8px;cursor:pointer;font-size:16px}
+.ib.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.mini{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.mini button{padding:6px 10px;border:1px solid var(--bd);background:var(--key);color:var(--tx);border-radius:8px;cursor:pointer;font-size:13px}
+.mini button.pri{background:var(--ac);color:#fff;border-color:var(--ac)}
+.rg{width:100%;margin:8px 0 0;accent-color:var(--lo)}
+.chk{display:flex;gap:6px;align-items:center;font-size:12px;color:var(--mu);margin:6px 0 0;font-weight:500}
+#err{color:var(--bad);font-size:12px;margin:4px 0 0}#err:empty{display:none}
+#msg:empty{display:none}#msg{padding:10px 12px 0}#msg .msg{margin:0;font-size:13px}
+.lt{width:100%;font:13px system-ui}.lt td{text-align:left;padding:5px 2px;border-bottom:1px solid var(--bd);white-space:normal}.lt td:last-child{text-align:right;font-family:ui-monospace,Menlo,monospace}
+.lt small{color:var(--mu);font-family:system-ui}
+.cont{margin-top:10px;padding:10px 12px;border-radius:10px;border:1px solid;font-size:13px}
+.cont.ok{border-color:var(--ok);color:var(--ok)}.cont.bad{border-color:var(--bad);color:var(--bad)}.cont.warn{border-color:var(--up);color:var(--up)}
+.cont b{font-size:15px;display:block;margin-bottom:2px}.cont span{color:var(--tx)}
+.blk{padding:10px 12px;border-bottom:1px solid var(--bd)}
+.blk h4{margin:0 0 6px;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--mu)}
+.story{line-height:1.7;font-size:13px}
+#kbwrap{display:none;position:sticky;bottom:0;margin-top:auto;background:var(--card);border-top:2px solid var(--bd);padding:8px 10px;max-height:46vh;overflow:auto;z-index:5}
+#kbwrap.open{display:block}
+@media(max-width:820px){.wrap.app{display:flex;flex-direction:column;height:auto;overflow:visible}.plot{order:-1;height:62vh;min-height:340px}.emb .plot{height:420px}.side{overflow:visible;border-right:0}}
+#hud{position:absolute;left:12px;top:10px;font:700 18px system-ui;color:var(--tx);pointer-events:none}.rg{accent-color:var(--ac)}</style></head><body><div class="wrap app">
+<aside class="side" id="side">
+<div class="hdr">Sequence of Functions</div>
+<div class="xr"><span class="bd" style="background:#c74440">fₙ</span><div>
+ <div class="row"><input type="text" id="fx" class="kb" value="x^n" autocomplete="off" spellcheck="false" placeholder="fₙ(x) = …"><button type="button" class="ib" id="kbt" title="Show / hide math keyboard">⌨</button></div>
+ <div id="err"></div><div class="note" id="interp" style="font-size:11px;margin-top:4px"></div>
+ <select id="ex" style="margin-top:8px"></select></div></div>
+<div class="xr"><span class="bd" style="background:#388c46">x</span><div>
+ <div class="note" style="margin-bottom:4px">Domain  x ∈ [ from , to ]  (empty = all real numbers)</div>
+ <div class="row"><input type="text" id="d0" class="kb" placeholder="−∞" autocomplete="off"><input type="text" id="d1" class="kb" placeholder="+∞" autocomplete="off"></div></div></div>
+<div class="xr"><span class="bd" style="background:#6042a6">n</span><div>
+ <div class="row"><input type="text" id="n" class="kb" value="5" autocomplete="off"><div class="mini"><button type="button" id="np">−</button><button type="button" id="nn">+</button><button type="button" id="pl" class="pri">▶ Play</button></div></div>
+ <input type="range" class="rg" id="nr" min="1" max="30" step="1" value="5">
+ <div class="row" style="margin-top:8px"><span class="note" style="white-space:nowrap">n goes up to</span><input type="text" id="nmax" class="kb" value="30" style="max-width:80px" autocomplete="off"></div>
+ <div class="row" style="margin-top:8px"><span class="note" style="white-space:nowrap">Play speed</span><input type="range" class="rg" id="sp" min="0.25" max="5" step="0.25" value="1" style="margin:0"><b id="spv" style="min-width:36px;font-size:13px">1×</b></div>
+ <label class="chk"><input type="checkbox" id="tr" checked> also show the earlier curves f₁ … fₙ₋₁ (blue → purple → red = older → newer)</label></div></div>
+<div class="xr"><span class="bd" style="background:#13804a">ε</span><div>
+ <label class="chk" style="margin:0 0 6px;font-size:13px;color:var(--tx);font-weight:600"><input type="checkbox" id="eb"> Show ε-band around the limit f &nbsp;(ε–N view)</label>
+ <div id="epan" style="display:none">
+  <div class="row"><span class="note" style="white-space:nowrap">ε =</span><input type="text" id="eps" class="kb" value="0.2" style="max-width:100px" autocomplete="off"></div>
+  <input type="range" class="rg" id="er" min="0.01" max="2" step="0.01" value="0.2">
+  <div class="note" style="margin:8px 0 4px">Limit function f(x) — leave empty to estimate it automatically (uses a huge n)</div>
+  <input type="text" id="lim" class="kb" placeholder="auto" autocomplete="off" spellcheck="false">
+  <div class="mini" style="margin-top:8px"><button type="button" id="fn" class="pri">Find N for this ε</button><button type="button" id="cl">Clear point x₀</button></div>
+  <div class="note" style="margin:10px 0 4px;font-weight:600;color:var(--tx)">Your own ε and N — test it yourself</div>
+  <div class="row"><span class="note" style="white-space:nowrap">N =</span><input type="text" id="ckN" class="kb" value="10" style="max-width:100px" autocomplete="off"><button type="button" id="ck" class="mini pri" style="padding:8px 12px;border:1px solid var(--ac);background:var(--ac);color:#fff;border-radius:8px;cursor:pointer;font-size:13px">Check ε, N</button><button type="button" id="ckx" class="ib" style="font-size:13px">Hide</button></div>
+  <div class="note" style="font-size:12px;margin-top:4px">Uses the ε above. It tests: “for <b>every</b> n ≥ N, does fₙ stay inside the tube?” — and draws the curves fₙ (n ≥ N) so you can see which ones escape (red parts).</div>
+  <div id="ckout" class="cont" style="display:none"></div>
+  <div id="estat" class="cont" style="display:none"></div>
+  <div id="efind" class="cont" style="display:none"></div>
+  <div class="note" style="margin:10px 0 4px;font-weight:600;color:var(--tx)">δ — continuity around the clicked point x₀</div>
+  <div class="row"><span class="note" style="white-space:nowrap">δ =</span><input type="text" id="dl" class="kb" value="0.1" style="max-width:100px" autocomplete="off"></div>
+  <div class="note" style="font-size:12px;margin-top:4px">Click a point x₀ on the graph. A box of width 2δ and height 2ε is drawn around it (green = limit f, orange = current fₙ). The check: “|x − x₀| &lt; δ ⇒ |g(x) − g(x₀)| &lt; ε”. Each fₙ may be continuous while the limit f is not — that is exactly when the convergence cannot be uniform.</div>
+  <div id="eprobe" class="cont" style="display:none"></div>
+  <div id="edel" class="cont" style="display:none"></div>
+  <div class="note" style="margin-top:8px;font-size:12px">The green tube is (f − ε, f + ε). Parts of fₙ outside it are drawn <b style="color:var(--bad)">red</b>. “Uniform” = the whole curve fits in the tube for all n ≥ N. <b>Click on the graph</b> to pick a point x₀ and see the N that works only at that point (pointwise). If that N blows up as x₀ moves, the convergence is not uniform.</div>
+ </div></div></div>
+<div class="blk"><details><summary>How to read this</summary><div class="story">The thick curve is the current fₙ; the faint curves are earlier members of the sequence. Use any letter for the index (default <b>n</b>) and write piecewise functions with the keyboard’s Piecewise tab or <code>{ expr if cond; expr otherwise }</code>. Scroll / pinch to zoom, drag to pan, ⌂ restores the example’s view.</div></details></div>
+<div class="blk"><details><summary>More: variable names, constants, syntax guide</summary>
+<div class="grid2"><div><label for="vr">Variable</label><input type="text" id="vr" class="kb" value="x" autocomplete="off" spellcheck="false"></div>
+<div><label for="ix">Index</label><input type="text" id="ix" class="kb" value="n" autocomplete="off" spellcheck="false"></div></div>
+<div style="margin-top:10px"><label for="cs">Constants / helper functions, e.g. k=2, g(t)=t^2+1</label><input type="text" id="cs" class="kb" placeholder="k=2, α=0.5" autocomplete="off" spellcheck="false"></div>
+<details><summary>Syntax guide (everything this calculator understands)</summary><ul>
+<li><b>Piecewise:</b> <code>{ x^2 if x&lt;1; 2 if 1&lt;=x&lt;2; 4-x otherwise }</code> (separate pieces with <code>;</code>) — or use the <b>Piecewise</b> tab to build it with boxes. Also works as <code>x&lt;1 ? x : 2</code>.</li>
+<li><b>Chained inequalities:</b> <code>0 &lt; x &lt;= 1</code>; <b>intervals:</b> <code>x ∈ [0, 1)</code>; combine with <code>and</code>, <code>or</code>, <code>xor</code>, <code>not</code> (or ∧ ∨ ¬).</li>
+<li><b>Summation / product:</b> <code>∑(k^2, k, 1, 5)</code> = <code>Sum(…)</code>, <code>∏(1+x/k, k, 1, 4)</code> = <code>Prod(…)</code>. The index can be any letter.</li>
+<li><b>Calculus:</b> <code>∫(t^2, t, 0, x)</code> definite integral, <code>D(sin(t^2), t, x)</code> derivative at x, <code>D2(…)</code> second derivative, <code>Lim(sin(t)/t, t, 0)</code> two-sided limit.</li>
+<li><b>Functions:</b> trig, inverse trig, hyperbolic, inverse hyperbolic, exp, ln, log (base 10) and <code>log(x, base)</code>, sqrt, cbrt, nthRoot, floor, ceil, round, abs, sign, mod, gcd, lcm, factorial <code>n!</code>, gamma, beta, erf, erfc, combinations, permutations, mean, median, min, max, std, variance, plus step helpers <code>H</code>, <code>rect</code>, <code>tri</code>, <code>sinc</code>, <code>clamp</code>, <code>frac</code>.</li>
+<li><b>Symbols:</b> × ÷ · − π √ ∛ ≤ ≥ ≠ ∞ ° ⌊x⌋ ⌈x⌉ |x| x² x³ x⁻¹ a₁ and all Greek letters.</li>
+<li><b>Any letter</b> other than the variable is a parameter: define it in the Constants box (<code>k=2</code>). Use <code>*</code> or a space between variables: <code>k x</code>, not <code>kx</code>.</li>
+</ul></details></details></div>
+<div id="msg"></div>
+<div id="kbwrap"><div class="tabs" id="tabs"></div><div id="keys"></div></div>
+</aside>
+<main class="plot"><canvas id="cv"></canvas><div id="hud"></div>
+<div class="fab"><button type="button" id="zi" title="Zoom in">+</button><button type="button" id="zo" title="Zoom out">−</button><button type="button" id="home" title="Reset view">⌂</button></div>
+<div id="ro"></div></main>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const esc=s=>String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const toNum=v=>{if(typeof v==="number")return v;if(typeof v==="boolean")return +v;if(v&&typeof v.re==="number"&&Math.abs(v.im||0)<1e-12)return v.re;return NaN};
+
+/* ================= big operators registered inside math.js ================= */
+(function(){
+ if(!window.math)return;
+ const cache=new WeakMap();
+ const comp=n=>{let c=cache.get(n);if(!c){c=n.compile();cache.set(n,c)}return c};
+ const U=m=>{const e=new Error(m);e.user=true;return e};
+ const mkLocal=scope=>{
+  if(scope&&typeof scope.keys==="function"&&typeof scope.get==="function"){const m=new Map();for(const k of scope.keys())m.set(k,scope.get(k));return{set:(k,v)=>m.set(k,v),ev:c=>c.evaluate(m)}}
+  const o=Object.assign({},scope);return{set:(k,v)=>{o[k]=v},ev:c=>c.evaluate(o)}};
+ const need=(args,n,nm,sig)=>{if(args.length!==n)throw U(nm+" needs "+n+" arguments: "+sig)};
+ const vname=(node,nm)=>{if(!node.isSymbolNode)throw U(nm+": the 2nd argument must be a plain variable name, e.g. k");return node.name};
+ const num=(node,scope)=>toNum(comp(node).evaluate(scope));
+ const lam=(node,v,scope)=>{const c=comp(node),L=mkLocal(scope);return t=>{L.set(v,t);return toNum(L.ev(c))}};
+ const Sum=(args,m,scope)=>{need(args,4,"Sum","Sum(expression, k, from, to)");const v=vname(args[1],"Sum");
+  const lo=Math.ceil(num(args[2],scope)),hi=Math.floor(num(args[3],scope));
+  if(!isFinite(lo)||!isFinite(hi))throw U("Sum: the limits must be finite numbers");
+  if(hi-lo>2e6)throw U("Sum: too many terms (maximum 2,000,000)");
+  const g=lam(args[0],v,scope);let s=0;for(let k=lo;k<=hi;k++)s+=g(k);return s};
+ const Prod=(args,m,scope)=>{need(args,4,"Prod","Prod(expression, k, from, to)");const v=vname(args[1],"Prod");
+  const lo=Math.ceil(num(args[2],scope)),hi=Math.floor(num(args[3],scope));
+  if(!isFinite(lo)||!isFinite(hi))throw U("Prod: the limits must be finite numbers");
+  if(hi-lo>2e6)throw U("Prod: too many terms (maximum 2,000,000)");
+  const g=lam(args[0],v,scope);let s=1;for(let k=lo;k<=hi;k++)s*=g(k);return s};
+ const adapt=(g,a,b,tol)=>{let cnt=0;const f=t=>{cnt++;return g(t)};
+  const rec=(a,b,fa,fm,fb,whole,tol,d)=>{const m=(a+b)/2,l=(a+m)/2,r=(m+b)/2,fl=f(l),fr=f(r);
+   const L=(m-a)/6*(fa+4*fl+fm),R=(b-m)/6*(fm+4*fr+fb),S=L+R;
+   if(!isFinite(S))return NaN;
+   if(d<=0||cnt>60000||Math.abs(S-whole)<=15*tol)return S+(S-whole)/15;
+   return rec(a,m,fa,fl,fm,L,tol/2,d-1)+rec(m,b,fm,fr,fb,R,tol/2,d-1)};
+  const N=8,w=(b-a)/N;let tot=0;
+  for(let i=0;i<N;i++){const x0=a+i*w,x1=x0+w,xm=(x0+x1)/2,f0=f(x0),fm=f(xm),f1=f(x1);
+   tot+=rec(x0,x1,f0,fm,f1,(x1-x0)/6*(f0+4*fm+f1),tol/N,16)}
+  return tot};
+ const Int=(args,m,scope)=>{need(args,4,"Int","Int(expression, t, from, to)");const v=vname(args[1],"Int");
+  const a=num(args[2],scope),b=num(args[3],scope);
+  if(!isFinite(a)||!isFinite(b))throw U("Int: the limits must be finite numbers");
+  if(a===b)return 0;const g=lam(args[0],v,scope);
+  return a<b?adapt(g,a,b,1e-10):-adapt(g,b,a,1e-10)};
+ const D=(args,m,scope)=>{need(args,3,"D","D(expression, t, point)");const v=vname(args[1],"D");
+  const p=num(args[2],scope),g=lam(args[0],v,scope),h=1e-3*Math.max(1,Math.abs(p));
+  return(g(p-2*h)-8*g(p-h)+8*g(p+h)-g(p+2*h))/(12*h)};
+ const D2=(args,m,scope)=>{need(args,3,"D2","D2(expression, t, point)");const v=vname(args[1],"D2");
+  const p=num(args[2],scope),g=lam(args[0],v,scope),h=1e-2*Math.max(1,Math.abs(p));
+  return(-g(p+2*h)+16*g(p+h)-30*g(p)+16*g(p-h)-g(p-2*h))/(12*h*h)};
+ const Lim=(args,m,scope)=>{need(args,3,"Lim","Lim(expression, t, point)");const v=vname(args[1],"Lim");
+  const c=num(args[2],scope),g=lam(args[0],v,scope),s=Math.max(1,Math.abs(c));
+  const L=g(c-1e-7*s),R=g(c+1e-7*s),L2=g(c-1e-5*s),R2=g(c+1e-5*s);
+  const ok=(p,q)=>isFinite(p)&&isFinite(q)&&Math.abs(p-q)<=1e-4*(1+Math.abs(p));
+  return ok(L,R)&&ok(L,L2)&&ok(R,R2)?(L+R)/2:NaN};
+ const all={Sum,Prod,Int,D,D2,Lim};
+ for(const k in all)all[k].rawArgs=true;
+ math.import(all,{override:true});
+})();
+
+/* ================= scope, parsing, normalising ================= */
+function scopeBase(){return{x:0,
+ ln:Math.log,lg:Math.log10,
+ log:(v,b)=>b===undefined?Math.log10(v):Math.log(v)/Math.log(b),
+ logb:(v,b)=>Math.log(v)/Math.log(b),
+ arcsin:Math.asin,arccos:Math.acos,arctan:Math.atan,sgn:Math.sign,
+ tau:2*Math.PI,phi:(1+Math.sqrt(5))/2,
+ H:t=>t<0?0:1,heaviside:t=>t<0?0:1,
+ rect:t=>Math.abs(t)<.5?1:Math.abs(t)===.5?.5:0,
+ tri:t=>Math.max(0,1-Math.abs(t)),
+ sinc:t=>t===0?1:Math.sin(Math.PI*t)/(Math.PI*t),
+ clamp:(v,lo,hi)=>Math.min(Math.max(v,lo),hi),
+ frac:t=>t-Math.floor(t),
+ erfc:t=>1-math.erf(t),
+ beta:(p,q)=>math.gamma(p)*math.gamma(q)/math.gamma(p+q)}}
+const KW=new Set(["and","or","xor","not","mod","to","in","if","else"]);
+function splitTop(s,re){const out=[];let d=0,cur="";for(const ch of s){if("([{".includes(ch))d++;else if(")]}".includes(ch))d--;if(d===0&&re.test(ch)){out.push(cur);cur=""}else cur+=ch}out.push(cur);return out}
+
+function parseCases(s){
+ const m=s.trim().match(/^(?:piecewise\s*)?\{([\s\S]*)\}$/i);if(!m)return null;
+ const out=[];
+ for(const raw of splitTop(m[1],/[;\n]/)){const q=raw.trim();if(!q)continue;
+  let k=q.match(/^([\s\S]+?)\s*,?\s*\b(?:otherwise|else)\b\s*$/i);
+  if(k){out.push({e:k[1].trim(),c:null});continue}
+  k=q.match(/^([\s\S]+?)\s*,?\s*\b(?:if|when|for|where)\b\s*([\s\S]+)$/i);
+  if(!k)throw new Error("Piece “"+q+"” needs “if <condition>” (or “otherwise”). Separate pieces with “;”.");
+  out.push({e:k[1].trim(),c:k[2].trim()})}
+ if(!out.length)throw new Error("The piecewise definition { … } is empty.");
+ return out}
+function buildPiecewise(cs){let r="NaN";for(let i=cs.length-1;i>=0;i--){const{e,c}=cs[i];r=c===null?"("+e+")":"(("+c+") ? ("+e+") : "+r+")"}return r}
+
+const SUP="⁰¹²³⁴⁵⁶⁷⁸⁹",SUB="₀₁₂₃₄₅₆₇₈₉";
+function norm(s){
+ return s
+ .replace(/&&/g," and ").replace(/\|\|/g," or ").replace(/∧/g," and ").replace(/∨/g," or ").replace(/⊻/g," xor ").replace(/¬/g," not ")
+ .replace(/π/g," pi ").replace(/[×·∙⋅∗]/g,"*").replace(/[÷∕]/g,"/").replace(/[−–—‑]/g,"-")
+ .replace(/≤/g,"<=").replace(/≥/g,">=").replace(/≠/g,"!=").replace(/≡/g,"==").replace(/\*\*/g,"^")
+ .replace(/([\p{L}_][\p{L}\p{N}_]*)\s*∈\s*([\[(])\s*((?:[^,\[\]()]|\([^()]*\))+?)\s*,\s*((?:[^,\[\]()]|\([^()]*\))+?)\s*([\])])/gu,
+   (m,v,l,a,b,r)=>"("+v+(l==="["?">=":">")+a+" and "+v+(r==="]"?"<=":"<")+b+")")
+ .replace(/⌊([^⌋]*)⌋/g,"floor($1)").replace(/⌈([^⌉]*)⌉/g,"ceil($1)")
+ .replace(/[∑Σ]\s*\(/g,"Sum(").replace(/[∏Π]\s*\(/g,"Prod(").replace(/∫\s*\(/g,"Int(").replace(/∂\s*\(/g,"D(")
+ .replace(/∛\s*\(/g,"cbrt(").replace(/√\s*\(/g,"sqrt(")
+ .replace(/∛\s*([\p{L}\p{N}_.]+)/gu,"cbrt($1)").replace(/√\s*([\p{L}\p{N}_.]+)/gu,"sqrt($1)")
+ .replace(/([⁺⁻]?)([⁰¹²³⁴⁵⁶⁷⁸⁹]+)/g,(m,sg,d)=>"^("+(sg==="⁻"?"-":"")+[...d].map(c=>SUP.indexOf(c)).join("")+")")
+ .replace(/[₀₁₂₃₄₅₆₇₈₉]+/g,m=>"_"+[...m].map(c=>SUB.indexOf(c)).join(""))
+ .replace(/°/g,"*(pi/180)").replace(/∞/g,"Infinity")
+ .replace(/\|([^|]+)\|/g,"abs($1)")}
+
+function fixChains(s){
+ const groups=[];
+ const chainOne=p=>{const tk=p.split(/(<=|>=|==|!=|<|>)/);if(tk.length<=3)return p;const t=[];for(let i=0;i+2<tk.length;i+=2)t.push("("+tk[i]+tk[i+1]+tk[i+2]+")");return t.join(" and ")};
+ const chain=t=>t.split(/(\band\b|\bor\b|\bxor\b|\?|:|,|;)/).map((p,i)=>i%2?p:chainOne(p)).join("");
+ const proc=str=>{let out="",i=0;
+  while(i<str.length){const ch=str[i];
+   if("([{".includes(ch)){let d=0,j=i;for(;j<str.length;j++){const c=str[j];if("([{".includes(c))d++;else if(")]}".includes(c)){d--;if(d===0)break}}
+    if(j>=str.length){out+=str.slice(i);break}
+    const inner=proc(str.slice(i+1,j));groups.push(ch+inner+str[j]);out+="\u0001"+(groups.length-1)+"\u0002";i=j+1}
+   else{out+=ch;i++}}
+  return chain(out)};
+ let r=proc(s);
+ while(/\u0001\d+\u0002/.test(r))r=r.replace(/\u0001(\d+)\u0002/g,(m,k)=>groups[+k]);
+ return r}
+
+function isFnName(n,sc){if(KW.has(n))return true;if(Object.prototype.hasOwnProperty.call(sc,n))return typeof sc[n]==="function";return typeof math[n]==="function"}
+const fixCalls=(s,sc)=>s.replace(/([\p{L}_][\p{L}\p{N}_]*)(\s*)\(/gu,(m,n)=>isFnName(n,sc)?m:n+"*(");
+
+function prep(s,sc,main){
+ let t=s.trim();
+ if(main)t=t.replace(/^(?:[\p{L}_][\p{L}\p{N}_]*\s*\(\s*[\p{L}_][\p{L}\p{N}_]*\s*\)|y)\s*=(?!=)\s*/u,"");
+ const cs=parseCases(t);if(cs)t=buildPiecewise(cs);
+ t=norm(t);
+ t=t.replace(/(?<![<>=!])=(?!=)/g,"==");
+ t=fixChains(t);
+ return fixCalls(t,sc)}
+
+const fmt=v=>!isFinite(v)?String(v):(Math.abs(v)>=1e9||(Math.abs(v)<1e-6&&v!==0))?v.toExponential(8):(+v.toFixed(10)).toString();
+function ev(s,sc){const v=toNum(math.evaluate(prep(s,sc,false),Object.assign({},sc)));if(!isFinite(v))throw new Error("“"+s+"” is not a finite real number");return v}
+function showMsg(t,c){$("msg").innerHTML=t?`<div class="msg ${c}">${t}</div>`:""}
+const NAMERE=/^[\p{L}_][\p{L}\p{N}_]*$/u;
+
+function build(expr,consts,vn){
+ const sc=scopeBase();sc[vn]=0;
+ for(const part of splitTop(consts||"",/[,;\n]/)){if(!part.trim())continue;
+  const m=part.match(/^\s*([^=<>!]+?)\s*=(?!=)\s*([\s\S]+)$/);
+  if(!m)throw new Error("Bad constant definition: “"+part.trim()+"”. Use name=value (k=2) or a function g(t)=t^2.");
+  const name=m[1].trim();
+  if(/^[\p{L}_][\p{L}\p{N}_]*\s*\([^)]*\)$/u.test(name)){math.evaluate(name+"="+prep(m[2],sc,false),sc)}
+  else{if(!NAMERE.test(name))throw new Error("“"+name+"” is not a valid constant name.");
+   const v=toNum(math.evaluate(prep(m[2],sc,false),Object.assign({},sc)));
+   if(!isFinite(v))throw new Error("Constant “"+name+"” must be a finite real number.");sc[name]=v}}
+ const src=prep(expr,sc,true);
+ const code=math.compile(src);
+ const raw=x=>{sc[vn]=x;try{return toNum(code.evaluate(sc))}catch(_){return NaN}};
+ return{raw,probe(x){sc[vn]=x;return code.evaluate(sc)},sc,src}}
+
+/* ================= sequence of functions ================= */
+if(self!==top)document.documentElement.classList.add("emb");
+const lab=v=>{const t=+(+v).toPrecision(5);return(Math.abs(t)>=1e5||(t!==0&&Math.abs(t)<1e-4))?t.toExponential(2):String(t)};
+const p9=v=>String(+(+v).toPrecision(9));
+const USERERR=/Undefined (symbol|function)|Too (few|many) arguments|is not a function/i;
+function friendly(msg){
+ let m=/Undefined symbol (.+)/.exec(msg);if(m)return"Unknown symbol “"+m[1]+"”. Define it under “More” (e.g. "+m[1]+"=2). Tip: write k*x, not kx.";
+ m=/Undefined function (.+)/.exec(msg);if(m)return"Unknown function “"+m[1]+"”. Check the spelling or use the Functions tab.";
+ return msg}
+let PX=null,down=null,CK=null;
+let S=null,V=null,H0={x0:-2,x1:2,y0:-2,y1:2},G=null,timer=null,nowN=5;
+const val=(k,x)=>{S.F.sc[S.ix]=k;return S.F.raw(x)};
+
+function calc(q){
+ try{
+  if(!window.math)throw new Error("The math engine failed to load (check your internet connection and reload).");
+  const expr=$("fx").value.trim();if(!expr)throw new Error("Please enter fₙ(x).");
+  const vn=$("vr").value.trim()||"x",ix=$("ix").value.trim()||"n";
+  if(!NAMERE.test(vn)||!NAMERE.test(ix))throw new Error("Variable and index must be valid names (letters).");
+  if(vn===ix)throw new Error("Variable and index must be different letters.");
+  const F=build(expr,$("cs").value,vn);F.sc[ix]=1;$("interp").textContent="Interpreted as: "+F.src;
+  const e0=$("d0").value.trim(),e1=$("d1").value.trim();
+  const lo=e0?ev(e0,F.sc):-Infinity,hi=e1?ev(e1,F.sc):Infinity;
+  if(!(lo<hi))throw new Error("Domain needs from < to.");
+  for(let i=0;i<=8;i++){try{F.probe(isFinite(lo)&&isFinite(hi)?lo+(hi-lo)*i/8:i-4)}catch(e){if(e.user||USERERR.test(e.message))throw e}}
+  const nmax=Math.max(1,Math.min(2000,Math.floor(ev($("nmax").value||"30",F.sc))));
+  const n=Math.max(1,Math.min(nmax,Math.round(ev($("n").value||"1",F.sc))));
+  $("nr").max=nmax;$("nr").value=n;nowN=n;$("err").textContent="";
+  const band=$("eb").checked;let L=null,eps=0.2;
+  if(band){
+   eps=ev($("eps").value||"0.2",F.sc);if(!(eps>0))throw new Error("ε must be positive.");
+   const le=$("lim").value.trim();
+   if(le){const LF=build(le,$("cs").value,vn);L=x=>LF.raw(x)}
+   else L=x=>{F.sc[ix]=1e6;return F.raw(x)}}
+  S={F,ix,lo,hi,n,nmax,band,L,eps};
+  if(!V)V={...H0};
+  draw();
+ }catch(err){$("err").innerHTML=friendly(String(err.message||err).replace(/</g,"&lt;"))}
+}
+
+function draw(){
+ if(!S)return;const{lo,hi,n}=S;
+ const cv=$("cv"),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
+ if(cv.width!==Math.round(W*dpr)||cv.height!==Math.round(H*dpr)){cv.width=Math.round(W*dpr);cv.height=Math.round(H*dpr)}
+ const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+ const css=k=>getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+ const tx=css("--tx"),mu=css("--mu"),bd=css("--bd");
+ const{x0,x1,y0,y1}=V,X=x=>(x-x0)/(x1-x0)*W,Y=y=>H-(y-y0)/(y1-y0)*H;G={X,Y,W,H};
+ const nice=(r,px)=>{const raw=r/(px/90),m=Math.pow(10,Math.floor(Math.log10(raw)));for(const k of[1,2,5,10])if(k*m>=raw*.999)return k*m},
+  gx=nice(x1-x0,W),gy=nice(y1-y0,H),dec=g=>Math.min(12,Math.max(0,Math.ceil(-Math.log10(g)-1e-9)));
+ c.font="11px system-ui";c.lineWidth=1;
+ const ax=Math.min(Math.max(Y(0),16),H-8),ay=Math.min(Math.max(X(0),30),W-4);
+ for(let i=Math.ceil(x0/gx);i<=x1/gx;i++){const x=X(i*gx);c.strokeStyle=i===0?mu:bd;c.beginPath();c.moveTo(x,0);c.lineTo(x,H);c.stroke();
+  if(i!==0){c.fillStyle=mu;c.textAlign="center";c.fillText((i*gx).toFixed(dec(gx)),x,ax+(ax>H-20?-4:14))}}
+ for(let i=Math.ceil(y0/gy);i<=y1/gy;i++){const y=Y(i*gy);c.strokeStyle=i===0?mu:bd;c.beginPath();c.moveTo(0,y);c.lineTo(W,y);c.stroke();
+  if(i!==0){c.fillStyle=mu;c.textAlign=ay<40?"left":"right";c.fillText((i*gy).toFixed(dec(gy)),ay<40?4:ay-4,y-3)}}
+ const a=Math.max(x0,lo),b=Math.min(x1,hi);
+ if(isFinite(lo)||isFinite(hi)){c.strokeStyle=mu;c.lineWidth=1;c.setLineDash([3,4]);c.beginPath();
+  if(isFinite(lo)){c.moveTo(X(lo),0);c.lineTo(X(lo),H)}if(isFinite(hi)){c.moveTo(X(hi),0);c.lineTo(X(hi),H)}c.stroke();c.setLineDash([])}
+ if(!(a<b)){$("hud").textContent="n = "+n;return}
+ let sup=0,supx=a;
+ if(S.band){
+  const{eps,L}=S;
+  c.fillStyle="rgba(40,170,95,.22)";
+  c.strokeStyle=css("--ok");c.lineWidth=1.5;c.setLineDash([6,4]);c.beginPath();
+  let pl=null;
+  for(let px=X(a);px<=X(b);px+=2){const x=x0+px/W*(x1-x0),l=L(x);
+   if(isFinite(l)){c.fillRect(px,Y(l+eps),2.5,Y(l-eps)-Y(l+eps));
+    if(pl!==null&&Math.abs(l-pl)<.4*(y1-y0))c.lineTo(px,Y(l));else c.moveTo(px,Y(l));pl=l}else pl=null}
+  c.stroke();c.setLineDash([]);
+  const m=Math.max(300,Math.round(W/2));
+  for(let i=0;i<=m;i++){const x=a+(b-a)*i/m,y=val(n,x),l=L(x);if(isFinite(y)&&isFinite(l)){const d=Math.abs(y-l);if(d>sup){sup=d;supx=x}}}
+ }
+ const curve=(k,m,col,lw)=>{c.strokeStyle=col;c.lineWidth=lw;let px=null,py=null;c.beginPath();
+  for(let i=0;i<=m;i++){const x=a+(b-a)*i/m,y=val(k,x);
+   if(isFinite(y)){if(px!==null&&Math.abs(y-py)<.4*(y1-y0)){c.lineTo(X(x),Y(y))}else c.moveTo(X(x),Y(y));px=x;py=y}else px=null}
+  c.stroke()};
+ if($("tr").checked&&n>1){const cnt=Math.min(n-1,30),ks=[];for(let i=0;i<cnt;i++){const k=cnt===n-1?i+1:Math.round(1+(n-2)*i/(cnt-1));if(!ks.includes(k))ks.push(k)}
+  const m=Math.max(300,Math.round(W/2*(b-a)/(x1-x0)));
+  ks.forEach(k=>{const t=(k-1)/Math.max(1,n-1);curve(k,m,`hsla(${Math.round(215-215*t)},75%,50%,.5)`,1.4)})}
+ if(!S.band)curve(n,Math.max(400,Math.round(W*(b-a)/(x1-x0))),tx,3);
+ else{
+  const{eps,L}=S,m=Math.max(400,Math.round(W*(b-a)/(x1-x0))),bad=css("--bad");
+  if(CK&&CK.on&&CK.N<=S.nmax){
+   const N0=CK.N,cnt=Math.min(25,S.nmax-N0+1),mm=Math.max(200,Math.round(W/3*(b-a)/(x1-x0)));
+   for(let j=0;j<cnt;j++){const k=cnt===1?N0:Math.round(N0+(S.nmax-N0)*j/(cnt-1));
+    const pin=new Path2D(),pout=new Path2D();let qx=null,qy=null;
+    for(let i=0;i<=mm;i++){const x=a+(b-a)*i/mm,y=val(k,x);
+     if(isFinite(y)){if(qx!==null&&Math.abs(y-qy)<.4*(y1-y0)){const l=L(x),o=isFinite(l)&&Math.abs(y-l)>eps,P=o?pout:pin;P.moveTo(X(qx),Y(qy));P.lineTo(X(x),Y(y))}qx=x;qy=y}else qx=null}
+    c.lineWidth=1.3;c.strokeStyle="rgba(60,120,240,.55)";c.stroke(pin);c.strokeStyle=bad;c.stroke(pout)}
+  }
+  c.lineWidth=3;c.lineCap="round";let px=null,py=null;
+  for(let i=0;i<=m;i++){const x=a+(b-a)*i/m,y=val(n,x);
+   if(isFinite(y)){if(px!==null&&Math.abs(y-py)<.4*(y1-y0)){const l=L(x);c.strokeStyle=(isFinite(l)&&Math.abs(y-l)>eps)?bad:tx;c.beginPath();c.moveTo(X(px),Y(py));c.lineTo(X(x),Y(y));c.stroke()}px=x;py=y}else px=null}
+  c.lineCap="butt";
+  const es=$("estat"),ok=sup<=eps;
+  es.style.display="block";es.className="cont "+(ok?"ok":"bad");
+  es.innerHTML=`<b>${ok?"fₙ lies inside the ε-band":"fₙ leaves the ε-band"}</b><span>n = ${n}: sup|fₙ − f| ≈ ${p9(sup)} ${ok?"≤":">"} ε = ${p9(eps)}${ok?"":"<br>largest gap near x ≈ "+p9(supx)}<br><small>(measured on the visible part of the domain)</small></span>`;
+  const ep=$("eprobe");
+  if(PX!==null){
+   const l=L(PX),yv=val(n,PX),ok2=isFinite(l)&&isFinite(yv);
+   if(PX>=a&&PX<=b){c.strokeStyle=css("--up");c.lineWidth=1.5;c.setLineDash([4,4]);c.beginPath();c.moveTo(X(PX),0);c.lineTo(X(PX),H);c.stroke();c.setLineDash([]);
+    if(ok2){c.fillStyle=css("--up");c.beginPath();c.arc(X(PX),Y(yv),5,0,7);c.fill();c.strokeStyle=css("--ok");c.lineWidth=2;c.beginPath();c.arc(X(PX),Y(l),5,0,7);c.stroke()}}
+   const ed=$("edel");ed.style.display="none";let dl=NaN;try{dl=ev($("dl").value||"0.1",S.F.sc)}catch(e){}
+   if(ok2&&dl>0){
+    const chk=g=>{const c0=g(PX);let w=0,wx=PX;for(let i=-100;i<=100;i++){const x=PX+dl*i/100;if(x<S.lo||x>S.hi)continue;const y=g(x);if(isFinite(y)&&isFinite(c0)){const d=Math.abs(y-c0);if(d>w){w=d;wx=x}}}return{ok:w<eps,w,wx}};
+    const gl=x=>L(x),gn=x=>val(n,x),rf=chk(gl),rn=chk(gn);
+    c.setLineDash([5,3]);c.lineWidth=2;
+    c.strokeStyle=css("--ok");c.strokeRect(X(PX-dl),Y(l+eps),X(PX+dl)-X(PX-dl),Y(l-eps)-Y(l+eps));
+    c.strokeStyle=css("--up");c.strokeRect(X(PX-dl),Y(yv+eps),X(PX+dl)-X(PX-dl),Y(yv-eps)-Y(yv+eps));c.setLineDash([]);
+    let allTxt="";
+    if(CK&&CK.on&&CK.N<=S.nmax){const cnt=Math.min(60,S.nmax-CK.N+1);let okAll=true,fk=0,fw=0;
+     for(let j=0;j<cnt;j++){const k=cnt===1?CK.N:Math.round(CK.N+(S.nmax-CK.N)*j/(cnt-1)),r=chk(x=>val(k,x));if(!r.ok){okAll=false;fk=k;fw=r.w;break}}
+     allTxt=`<br>Same δ for all fₖ, k ≥ ${CK.N}: ${okAll?"✓ works":"✗ fails (k = "+fk+", gap "+p9(fw)+")"}`}
+    ed.style.display="block";ed.className="cont "+(rf.ok?"ok":"bad");
+    ed.innerHTML=`<b>δ = ${p9(dl)}, ε = ${p9(eps)} at x₀ = ${p9(PX)}</b><span>Limit f: ${rf.ok?"✓ stays within ε":"✗ jumps by "+p9(rf.w)+" near x ≈ "+p9(rf.wx)}<br>Current fₙ (n = ${n}): ${rn.ok?"✓ stays within ε":"✗ gap "+p9(rn.w)+" near x ≈ "+p9(rn.wx)}${allTxt}</span>`}
+   ep.style.display="block";
+   if(!ok2){ep.className="cont warn";ep.innerHTML=`<b>x₀ = ${p9(PX)}</b><span>f or fₙ is not defined here.</span>`}
+   else{let N=1;for(let k=S.nmax;k>=1;k--){const y=val(k,PX);if(isFinite(y)&&Math.abs(y-l)>eps){N=k+1;break}}
+    const fail=N>S.nmax;ep.className="cont "+(fail?"bad":"ok");
+    let myTxt="";if(CK&&CK.on&&CK.N<=S.nmax){let okAll=true,fk=0;for(let k=CK.N;k<=S.nmax;k++){const y=val(k,PX);if(isFinite(y)&&Math.abs(y-l)>eps){okAll=false;fk=k;break}}
+     myTxt=`<br>Your N = ${CK.N}: ${okAll?"✓ works at this x₀":"✗ fails at x₀ (n = "+fk+")"}`}
+    ep.innerHTML=`<b>Point x₀ = ${p9(PX)}</b><span>f(x₀) = ${p9(l)}, |fₙ(x₀) − f(x₀)| = ${p9(Math.abs(yv-l))}<br>${fail?"No N ≤ "+S.nmax+" works at this point (raise “n goes up to”).":"For every n ≥ <b>N(x₀) = "+N+"</b> the value stays within ε."}${myTxt}</span>`}
+  }else{ep.style.display="none";$("edel").style.display="none"}
+ }
+ if(!S.band){["estat","eprobe","efind","edel"].forEach(i=>$(i).style.display="none")}
+ $("hud").textContent="n = "+n;
+}
+
+/* ---- pan & zoom ---- */
+const cvp=e=>{const r=$("cv").getBoundingClientRect();return[e.clientX-r.left,e.clientY-r.top]};
+function zoomAt(p,fx,fy){if(!V||!G)return;const{x0,x1,y0,y1}=V,xm=x0+p[0]/G.W*(x1-x0),ym=y0+(G.H-p[1])/G.H*(y1-y0);
+ const n={x0:xm-(xm-x0)*fx,x1:xm+(x1-xm)*fx,y0:ym-(ym-y0)*fy,y1:ym+(y1-ym)*fy};
+ if(n.x1-n.x0<1e-11*Math.max(1,Math.abs(xm))||n.y1-n.y0<1e-11*Math.max(1,Math.abs(ym))||n.x1-n.x0>1e9)return;V=n;draw()}
+const ptrs=new Map();let pan=null,pinch=null;const cv0=$("cv");
+cv0.addEventListener("pointerup",e=>{if(!down||!S||!S.band||!G)return;const p=cvp(e);
+ if(Math.hypot(p[0]-down[0],p[1]-down[1])<4){PX=V.x0+p[0]/G.W*(V.x1-V.x0);draw()}down=null});
+cv0.addEventListener("pointerdown",e=>{if(!G)return;cv0.setPointerCapture(e.pointerId);const p=cvp(e);ptrs.set(e.pointerId,p);down=p;
+ if(ptrs.size===2){down=null;pan=null;const[a,b]=[...ptrs.values()];pinch=Math.hypot(a[0]-b[0],a[1]-b[1]);return}
+ pan={p,v:{...V}};cv0.style.cursor="grabbing"});
+cv0.addEventListener("pointermove",e=>{const p=cvp(e);
+ if(!ptrs.has(e.pointerId)){if(!G||!S)return;const x=V.x0+p[0]/G.W*(V.x1-V.x0),y=val(S.n,x);$("ro").textContent="x = "+p9(x)+"   f"+"ₙ(x) = "+(isFinite(y)?p9(y):"not defined");return}
+ ptrs.set(e.pointerId,p);
+ if(ptrs.size===2&&pinch){const[a,b]=[...ptrs.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]),k=pinch/d;zoomAt([(a[0]+b[0])/2,(a[1]+b[1])/2],k,k);pinch=d;return}
+ if(pan){const dx=(p[0]-pan.p[0])/G.W*(pan.v.x1-pan.v.x0),dy=(p[1]-pan.p[1])/G.H*(pan.v.y1-pan.v.y0);
+  V={x0:pan.v.x0-dx,x1:pan.v.x1-dx,y0:pan.v.y0+dy,y1:pan.v.y1+dy};draw()}});
+const up2=e=>{ptrs.delete(e.pointerId);if(ptrs.size<2)pinch=null;if(!ptrs.size){pan=null;cv0.style.cursor="grab"}};
+cv0.addEventListener("pointerup",up2);cv0.addEventListener("pointercancel",up2);
+cv0.addEventListener("wheel",e=>{e.preventDefault();const f=Math.pow(1.0015,e.deltaY);zoomAt(cvp(e),e.altKey?1:f,e.shiftKey?1:f)},{passive:false});
+$("zi").onclick=()=>zoomAt([G.W/2,G.H/2],.7,.7);$("zo").onclick=()=>zoomAt([G.W/2,G.H/2],1/.7,1/.7);
+$("home").onclick=()=>{V={...H0};draw()};
+
+/* ---- controls ---- */
+const setN=v=>{$("n").value=v;calc(true)};
+const stopPlay=()=>{if(timer){clearInterval(timer);timer=null}$("pl").textContent="▶ Play"};
+const tick=()=>{if(!S||S.n>=S.nmax){stopPlay();return}setN(S.n+1)};
+const startTimer=()=>{if(timer)clearInterval(timer);const base=Math.max(60,Math.min(400,6000/(S?S.nmax:30)));timer=setInterval(tick,Math.max(16,base/(+$("sp").value||1)))};
+$("pl").onclick=()=>{if(timer){stopPlay();return}
+ if(!S)return;if(S.n>=S.nmax)setN(1);$("pl").textContent="⏸ Pause";startTimer()};
+$("sp").oninput=()=>{$("spv").textContent=$("sp").value+"×";if(timer)startTimer()};
+$("eb").onchange=()=>{$("epan").style.display=$("eb").checked?"block":"none";calc()};
+$("er").oninput=()=>{$("eps").value=$("er").value;calc()};
+$("eps").addEventListener("input",()=>{const v=parseFloat($("eps").value);if(isFinite(v))$("er").value=Math.min(2,Math.max(.01,v))});
+$("cl").onclick=()=>{PX=null;$("eprobe").style.display="none";draw()};
+$("fn").onclick=()=>{if(!S||!S.band){return}
+ const{lo,hi,nmax,eps,L,n}=S,a=Math.max(V.x0,lo),b=Math.min(V.x1,hi),xs=[],ls=[],m=200;
+ for(let i=0;i<=m;i++){const x=a+(b-a)*i/m,l=L(x);if(isFinite(l)){xs.push(x);ls.push(l)}}
+ const supk=k=>{let s=0;for(let i=0;i<xs.length;i++){const y=val(k,xs[i]);if(isFinite(y)){const d=Math.abs(y-ls[i]);if(d>s)s=d}}return s};
+ let N=1;for(let k=nmax;k>=1;k--){if(supk(k)>eps){N=k+1;break}}
+ const el=$("efind"),fail=N>nmax;el.style.display="block";el.className="cont "+(fail?"bad":"ok");
+ el.innerHTML=fail?`<b>No uniform N found</b><span>Even at n = ${nmax}, sup|fₙ − f| &gt; ε = ${p9(eps)} on the visible range. Either the convergence is not uniform here, or raise “n goes up to”.</span>`
+  :`<b>Uniform N = ${N}</b><span>For every n from ${N} up to ${nmax}, the whole curve fₙ stays inside the ε-band (ε = ${p9(eps)}). <button type="button" id="gon" class="ib" style="padding:3px 8px;font-size:12px">go to n = ${N}</button></span>`;
+ const g=$("gon");if(g)g.onclick=()=>{stopPlay();setN(N)}};
+function runCheck(){
+ const el=$("ckout");
+ if(!S||!S.band){el.style.display="none";return}
+ let N;try{N=Math.round(ev($("ckN").value||"1",S.F.sc))}catch(e){el.style.display="block";el.className="cont bad";el.innerHTML="<b>N is not a number</b>";CK=null;return}
+ N=Math.max(1,N);const{lo,hi,nmax,eps,L}=S,a=Math.max(V.x0,lo),b=Math.min(V.x1,hi),xs=[],ls=[],m=200;
+ for(let i=0;i<=m;i++){const x=a+(b-a)*i/m,l=L(x);if(isFinite(l)){xs.push(x);ls.push(l)}}
+ if(N>nmax){CK=null;el.style.display="block";el.className="cont warn";el.innerHTML=`<b>N = ${N} is above “n goes up to” (${nmax})</b><span>Raise the limit of n or choose a smaller N.</span>`;return}
+ let first=null,fails=0,worst=0,worstK=N,worstX=a;
+ for(let k=N;k<=nmax;k++){let s=0,sx=a;
+  for(let i=0;i<xs.length;i++){const y=val(k,xs[i]);if(isFinite(y)){const d=Math.abs(y-ls[i]);if(d>s){s=d;sx=xs[i]}}}
+  if(s>eps){fails++;if(!first)first={k,s,x:sx}}
+  if(s>worst){worst=s;worstK=k;worstX=sx}}
+ CK={on:true,N};
+ el.style.display="block";
+ if(!first){el.className="cont ok";
+  el.innerHTML=`<b>✓ ε = ${p9(eps)}, N = ${N} works</b><span>For every n from ${N} to ${nmax}, the whole curve fₙ lies inside the tube (largest gap ${p9(worst)} at n = ${worstK}).<br><small>Checked on the visible part of the domain, n up to ${nmax}.</small></span>`}
+ else{el.className="cont bad";
+  el.innerHTML=`<b>✗ ε = ${p9(eps)}, N = ${N} does NOT work</b><span>fₙ leaves the tube for ${fails} value${fails>1?"s":""} of n in [${N}, ${nmax}]. First failure: n = ${first.k}, gap ${p9(first.s)} near x ≈ ${p9(first.x)}.<br>Try a larger N, or press “Find N for this ε”. If it fails for every N, the convergence is not uniform.</span>`}
+ draw()}
+$("ck").onclick=runCheck;
+$("dl").addEventListener("input",()=>draw());
+$("ckN").addEventListener("input",()=>{if(CK)runCheck()});
+$("eps").addEventListener("input",()=>{if(CK)setTimeout(runCheck,0)});
+$("er").addEventListener("input",()=>{if(CK)setTimeout(runCheck,0)});
+$("ckx").onclick=()=>{CK=null;$("ckout").style.display="none";draw()};
+$("np").onclick=()=>{stopPlay();setN(Math.max(1,nowN-1))};$("nn").onclick=()=>{stopPlay();setN(nowN+1)};
+$("nr").oninput=()=>setN(+$("nr").value);
+["fx","d0","d1","n","nmax","vr","ix","cs","eps","lim"].forEach(id=>$(id).addEventListener("input",()=>calc(true)));
+$("tr").addEventListener("change",()=>draw());
+const kbOpen=on=>{$("kbwrap").classList.toggle("open",on);$("kbt").classList.toggle("on",on);
+ document.querySelectorAll("input.kb").forEach(i=>i.setAttribute("inputmode",on?"none":"text"));if(on)$("fx").focus()};
+$("kbt").onclick=()=>kbOpen(!$("kbwrap").classList.contains("open"));
+
+/* ================= keyboard ================= */
+let tgt=$("fx"),reg=[],cur="123",shift=false;
+document.addEventListener("focusin",e=>{if(e.target.classList&&e.target.classList.contains("kb"))tgt=e.target});
+const fire=el=>el.dispatchEvent(new Event("input",{bubbles:true}));
+function setCaret(el,a,b){el.focus();try{el.setSelectionRange(a,b===undefined?a:b)}catch(_){}}
+function ins(text,sp){
+ if(!tgt.isConnected)tgt=$("fx");
+ const el=tgt,v=el.value,p=el.selectionStart??v.length,q=el.selectionEnd??p;
+ let s=text,a=-1,b=-1;const i=s.indexOf("‹");
+ if(i>=0){const j=s.indexOf("›");s=s.slice(0,i)+s.slice(i+1,j)+s.slice(j+1);a=i;b=j-1}
+ if(sp&&p>0&&/\p{L}/u.test(v[p-1])&&/^[\p{L}(]/u.test(s)){s=" "+s;if(a>=0){a++;b++}}
+ el.value=v.slice(0,p)+s+v.slice(q);
+ const A=a>=0?p+a:p+s.length,B=a>=0?p+b:A;
+ setCaret(el,A,B);fire(el)}
+function bsp(){if(!tgt.isConnected)tgt=$("fx");const el=tgt,v=el.value,p=el.selectionStart??v.length,q=el.selectionEnd??p;
+ if(p!==q){el.value=v.slice(0,p)+v.slice(q);setCaret(el,p)}else if(p>0){el.value=v.slice(0,p-1)+v.slice(p);setCaret(el,p-1)}fire(el)}
+function mv(d){if(!tgt.isConnected)tgt=$("fx");const el=tgt,p=d<0?el.selectionStart:el.selectionEnd;const np=Math.max(0,Math.min(el.value.length,p+d));setCaret(el,np)}
+
+function K(l,t,o){o=o||{};reg.push({t,sp:o.sp});return`<button type="button" data-i="${reg.length-1}" class="${o.c||""}" title="${esc(o.tip||t.replace(/[‹›]/g,""))}">${o.h?l:esc(l)}</button>`}
+const A=(l,a,c)=>`<button type="button" data-a="${a}" class="${c||""}">${l}</button>`;
+const sec=(t,items)=>`<div class="sec">${t}</div><div class="kr">${items.join("")}</div>`;
+const fnk=(n,tip)=>K(n,n+"(‹›)",{sp:1,tip:tip||n});
+
+function pBasic(){return`<div class="kb3">
+<div class="pad4">${K("x","x",{c:"it",sp:1})}${K("y","y",{c:"it",sp:1})}${K("z","z",{c:"it",sp:1})}${K("a<sup>b</sup>","^",{h:1,tip:"power ^"})}
+${K("(","(")}${K(")",")")}${K("<","<")}${K(">",">")}
+${K("|a|","abs(‹›)",{sp:1,tip:"absolute value"})}${K(",",",")}${K("≤","≤")}${K("≥","≥")}
+${A("A B C","tab:ABC","grey s2")}${K("√","√(‹›)",{sp:1,tip:"square root"})}${K("π","π",{sp:1})}</div>
+<div class="pad4">${["7","8","9"].map(d=>K(d,d,{c:"grey"})).join("")}${K("÷","÷")}
+${["4","5","6"].map(d=>K(d,d,{c:"grey"})).join("")}${K("×","×")}
+${["1","2","3"].map(d=>K(d,d,{c:"grey"})).join("")}${K("−","−")}
+${K("0","0",{c:"grey"})}${K(".",".",{c:"grey"})}${K("=","=")}${K("+","+")}</div>
+<div class="padr">${A("functions","tab:Functions","grey s2")}${A("←","left","grey")}${A("→","right","grey")}${A("⌫","back","grey s2")}${A("↵","enter","act s2")}</div></div>
+${sec("More",[K("[","["),K("]","]"),K("{","{"),K("}","}"),K(";",";"),K("?"," ? "),K(":"," : "),K("!","!",{tip:"factorial"}),K("%","%",{tip:"mod"}),K("x²","^2",{tip:"square"}),K("x³","^3"),K("x⁻¹","^(-1)"),K("ⁿ√","nthRoot(‹x›, ‹n›)",{sp:1}),K("e","e",{c:"it",sp:1,tip:"Euler's number"}),K("°","°",{tip:"degrees"}),K("∞","∞"),K("space"," "),A("clear","clear","grey")])}`}
+
+function pABC(){const rows=["qwertyuiop","asdfghjkl","zxcvbnm"];const cs=ch=>shift?ch.toUpperCase():ch;
+ const L=(ch)=>K(cs(ch),cs(ch),{c:"it"});
+ return`<div class="qw">${[...rows[0]].map(L).join("")}</div>
+<div class="qw">${[...rows[1]].map(L).join("")}${K("θ","θ",{c:"it"})}</div>
+<div class="qw">${A("⬆","shift",(shift?"act":"grey")+" w")}${[...rows[2]].map(L).join("")}${A("⌫","back","grey w")}</div>
+<div class="qw">${A("1 2 3","tab:123","grey w")}${K("a_b","_",{tip:"subscript / underscore"})}${K("!","!")}${K("'","'")}${K("[ ]","[‹›]")}${K("{ }","{‹›}")}${K("~","~")}${K("%","%")}${K(":",":")}${K(";",";")}${K(",",",")}${A("↵","enter","act w")}</div>`}
+
+function pGreek(){const lo="αβγδεζηθικλμνξοπρστυφχψω",up="ΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩ",va="ϵϑϰϖϱςϕ";
+ return sec("Lowercase Greek",[...lo].map(c=>K(c,c,{c:"it",sp:c==="π"?1:0})))+sec("Uppercase Greek",[...up].map(c=>K(c,c,{c:"it"})))+sec("Variant forms",[...va].map(c=>K(c,c,{c:"it"})))+
+ `<p class="note">Any Greek letter works as a parameter — define it in the Constants box, e.g. <code>α=0.5, λ=3</code>. Note π means 3.14159…; Σ(…) and Π(…) with brackets mean sum and product.</p>`}
+
+function pFunc(){
+ const inv=[["sin⁻¹","asin"],["cos⁻¹","acos"],["tan⁻¹","atan"],["csc⁻¹","acsc"],["sec⁻¹","asec"],["cot⁻¹","acot"]];
+ const invh=[["sinh⁻¹","asinh"],["cosh⁻¹","acosh"],["tanh⁻¹","atanh"],["csch⁻¹","acsch"],["sech⁻¹","asech"],["coth⁻¹","acoth"]];
+ return[
+ sec("Trig functions",["sin","cos","tan","csc","sec","cot"].map(n=>fnk(n))),
+ sec("Inverse trig functions",inv.map(([l,n])=>K(l,n+"(‹›)",{sp:1,tip:n})).concat(K("atan2","atan2(‹y›, ‹x›)",{sp:1}))),
+ sec("Hyperbolic trig functions",["sinh","cosh","tanh","csch","sech","coth"].map(n=>fnk(n))),
+ sec("Inverse hyperbolic",invh.map(([l,n])=>K(l,n+"(‹›)",{sp:1,tip:n}))),
+ sec("Exponential, logs & roots",[fnk("exp"),fnk("ln","natural log"),fnk("log","log base 10"),K("logₐ","log(‹x›, ‹a›)",{sp:1,tip:"log of x in base a"}),fnk("log2"),fnk("expm1"),fnk("log1p"),fnk("sqrt"),fnk("cbrt"),K("ⁿ√","nthRoot(‹x›, ‹n›)",{sp:1}),K("hypot","hypot(‹a›, ‹b›)",{sp:1})]),
+ sec("Calculus & big operators",[K("d/dx","D(‹sin(t^2)›, t, x)",{sp:1,tip:"derivative of the expression in t, evaluated at x"}),K("f″","D2(‹t^3›, t, x)",{sp:1,tip:"second derivative"}),K("∫","∫(‹t^2›, t, 0, x)",{tip:"definite integral"}),K("Σ","∑(‹k^2›, k, 1, 5)",{tip:"summation"}),K("Π","∏(‹k›, k, 1, 5)",{tip:"product"}),K("lim","Lim(‹sin(t)/t›, t, 0)",{sp:1,tip:"two-sided limit"})]),
+ sec("Rounding & numbers",[fnk("floor"),fnk("ceil"),fnk("round"),fnk("fix","truncate"),fnk("abs"),fnk("sign"),fnk("frac","fractional part"),K("mod","mod(‹a›, ‹b›)",{sp:1}),K("gcd","gcd(‹a›, ‹b›)",{sp:1}),K("lcm","lcm(‹a›, ‹b›)",{sp:1}),K("n!","!",{tip:"factorial"}),fnk("factorial"),fnk("gamma","Γ(x)"),K("B","beta(‹a›, ‹b›)",{sp:1,tip:"beta function"}),fnk("erf"),fnk("erfc"),K("nCr","combinations(‹n›, ‹k›)",{sp:1}),K("nPr","permutations(‹n›, ‹k›)",{sp:1}),fnk("cube"),fnk("square")]),
+ sec("Statistics",[K("mean","mean(‹a›, ‹b›, ‹c›)",{sp:1}),K("median","median(‹a›, ‹b›, ‹c›)",{sp:1}),K("min","min(‹a›, ‹b›)",{sp:1}),K("max","max(‹a›, ‹b›)",{sp:1}),K("std","std(‹a›, ‹b›, ‹c›)",{sp:1}),K("variance","variance(‹a›, ‹b›, ‹c›)",{sp:1}),K("mad","mad(‹a›, ‹b›, ‹c›)",{sp:1}),K("sum","sum(‹a›, ‹b›, ‹c›)",{sp:1}),K("prod","prod(‹a›, ‹b›, ‹c›)",{sp:1})]),
+ sec("Step & signal functions",[fnk("H","Heaviside step: 0 for x<0, 1 for x≥0"),fnk("rect","rectangle pulse"),fnk("tri","triangle pulse"),fnk("sinc","sin(πx)/(πx)"),K("clamp","clamp(‹x›, ‹lo›, ‹hi›)",{sp:1})])].join("")}
+
+function pLogic(){return[
+ sec("Inequalities & equality",["<",">","≤","≥","=","≠"].map(s=>K(s,s)).concat(K("==","=="),K("!=","!="))),
+ sec("Logic",[K("and"," and "),K("or"," or "),K("not","not "),K("xor"," xor "),K("∧","∧"),K("∨","∨"),K("¬","¬"),K("true","true"),K("false","false")]),
+ sec("Conditional (piecewise on one line)",[K("c ? a : b","(‹cond›) ? ‹a› : ‹b›",{tip:"if cond then a else b"}),K("?"," ? "),K(":"," : ")]),
+ sec("Ranges & intervals",[K("a < x < b","‹0› < x < 1"),K("a ≤ x ≤ b","‹0› <= x <= 1"),K("a ≤ x < b","‹0› <= x < 1"),K("a < x ≤ b","‹0› < x <= 1"),K("x ∈ [a, b]","x ∈ [‹0›, 1]"),K("x ∈ (a, b)","x ∈ (‹0›, 1)"),K("x ∈ [a, b)","x ∈ [‹0›, 1)"),K("x ∈ (a, b]","x ∈ (‹0›, 1]"),K("∈","∈")]),
+ sec("Number tests",[fnk("isInteger"),fnk("isPositive"),fnk("isNegative"),fnk("isZero"),fnk("isPrime"),K("%","%",{tip:"remainder"}),K("mod","mod(‹a›, ‹b›)",{sp:1})]),
+ `<p class="note">Conditions also work inside the <b>Piecewise</b> tab: <code>x &lt; 0</code>, <code>0 ≤ x &lt; 1</code>, <code>x ∈ [1, 2)</code>, <code>x &gt; 0 and mod(x, 2) &lt; 1</code>.</p>`].join("")}
+
+function pSym(){return[
+ sec("Arithmetic",["+","−","×","÷","·","^","!","%"].map(s=>K(s,s)).concat(K("√","√(‹›)"),K("∛","∛(‹›)"),K("°","°"),K("∞","∞"))),
+ sec("Superscripts",[..."⁰¹²³⁴⁵⁶⁷⁸⁹⁻"].map(s=>K(s,s))),
+ sec("Subscripts",[..."₀₁₂₃₄₅₆₇₈₉"].map(s=>K(s,s))),
+ sec("Brackets",["(",")","[","]","{","}"].map(s=>K(s,s)).concat(K("|a|","|‹›|"),K("⌊x⌋","⌊‹›⌋"),K("⌈x⌉","⌈‹›⌉"))),
+ sec("Big operators",[K("∑","∑(‹k^2›, k, 1, 5)"),K("∏","∏(‹k›, k, 1, 5)"),K("∫","∫(‹t^2›, t, 0, x)"),K("∂","∂(‹t^3›, t, x)",{tip:"derivative at a point"})]),
+ sec("Constants",[K("π","π",{sp:1}),K("e","e",{c:"it",sp:1}),K("τ","tau",{sp:1,tip:"2π"}),K("φ","phi",{sp:1,tip:"golden ratio"}),K("∞","∞")]),
+ sec("Relations & logic",["<",">","≤","≥","=","≠","≡","∈","∧","∨","¬","⊻"].map(s=>K(s,s))),
+ sec("Punctuation",[",",";",":","?",".","_","'"," "].map(s=>K(s===" "?"space":s,s)))].join("")}
+
+const PW={rows:[{e:"x^2",c:"x<1"},{e:"2",c:"1<=x<2"}],o:"4-x"};
+const PRESETS=[["|x|",[["-x","x<0"],["x","x>=0"]],""],["Heaviside",[["0","x<0"],["1","x>=0"]],""],["Ramp",[["0","x<1"],["x-1","x>=1"]],""],["Tent",[["x","0<=x<1"],["2-x","1<=x<2"]],"0"],["Stairs",[["1","x<1"],["2","1<=x<2"]],"3"],["Parabola+line",[["x^2","x<1"],["2*x-1","x>=1"]],""]];
+function pPiece(){return`<div class="sec">Piecewise definition — each row is “expression if condition”</div>
+${PW.rows.map((r,i)=>`<div class="pwrow"><input type="text" class="kb" data-pw="e" data-r="${i}" value="${esc(r.e)}" placeholder="expression, e.g. x^2" autocomplete="off" spellcheck="false"><span>if</span><input type="text" class="kb" data-pw="c" data-r="${i}" value="${esc(r.c)}" placeholder="condition, e.g. x &lt; 1" autocomplete="off" spellcheck="false"><button type="button" data-a="pwdel:${i}" class="grey">✕</button></div>`).join("")}
+<div class="pwrow"><input type="text" class="kb" data-pw="o" value="${esc(PW.o)}" placeholder="optional, e.g. 0" autocomplete="off" spellcheck="false"><span>otherwise</span></div>
+<div class="kr" style="margin:8px 0">${A("+ add piece","pwadd","grey")}${A("Use as f(x)","pwapply","act")}${A("Load from f(x)","pwload","grey")}${A("clear","pwclear","grey")}</div>
+${sec("Presets",PRESETS.map((p,i)=>A(p[0],"pwpreset:"+i,"grey")))}
+${sec("Insert into the focused box",[K("x","x",{c:"it",sp:1}),K("<","<"),K(">",">"),K("≤","≤"),K("≥","≥"),K("≠","≠"),K("and"," and "),K("or"," or "),K("a<x<b","‹0› < x < 1"),K("x ∈ [a,b)","x ∈ [‹0›, 1)"),K("(","("),K(")",")"),K("^","^"),K("√","√(‹›)"),K("π","π",{sp:1}),K("abs","abs(‹›)",{sp:1}),K("sin","sin(‹›)",{sp:1}),K("cos","cos(‹›)",{sp:1}),K("ln","ln(‹›)",{sp:1}),K("exp","exp(‹›)",{sp:1})])}
+<p class="note">Pieces are tried top to bottom; the first true condition wins. If a point matches no piece and there is no “otherwise”, f is undefined there and the integrability check will say so.</p>`}
+
+const TABS=["123","ABC","Greek","Functions","Logic","Symbols","Piecewise"];
+function render(){reg=[];if(!tgt.isConnected)tgt=$("fx");
+ const h={"123":pBasic,ABC:pABC,Greek:pGreek,Functions:pFunc,Logic:pLogic,Symbols:pSym,Piecewise:pPiece}[cur]();
+ $("tabs").innerHTML=TABS.map(k=>`<button type="button" class="tab ${k==cur?"on":""}" data-k="${k}">${k}</button>`).join("");
+ $("keys").innerHTML=h}
+function pwText(){const parts=PW.rows.filter(r=>r.e.trim()&&r.c.trim()).map(r=>r.e.trim()+" if "+r.c.trim());if(PW.o.trim())parts.push(PW.o.trim()+" otherwise");
+ return parts.length?"{ "+parts.join("; ")+" }":""}
+function pwApply(){const t=pwText();if(!t){showMsg("<b>Piecewise:</b> fill in at least one “expression if condition” row.","bad");return false}$("fx").value=t;return true}
+function act(a){
+ if(a.startsWith("tab:")){cur=a.slice(4);render();return}
+ if(a.startsWith("pwdel:")){PW.rows.splice(+a.slice(6),1);render();return}
+ if(a.startsWith("pwpreset:")){const p=PRESETS[+a.slice(9)];PW.rows=p[1].map(r=>({e:r[0],c:r[1]}));PW.o=p[2];render();pwApply();return}
+ switch(a){
+  case"back":bsp();break;case"left":mv(-1);break;case"right":mv(1);break;
+  case"clear":if(!tgt.isConnected)tgt=$("fx");tgt.value="";setCaret(tgt,0);fire(tgt);break;
+  case"enter":calc();break;
+  case"shift":shift=!shift;render();break;
+  case"pwadd":PW.rows.push({e:"",c:""});render();break;
+  case"pwclear":PW.rows=[{e:"",c:""}];PW.o="";render();break;
+  case"pwapply":if(pwApply())calc();break;
+  case"pwload":try{const cs=parseCases($("fx").value);if(!cs){showMsg("<b>Piecewise:</b> f(x) is not written as <code>{ expr if cond; expr otherwise }</code>.","bad");break}
+   PW.rows=cs.filter(c=>c.c!==null).map(c=>({e:c.e,c:c.c}));const o=cs.find(c=>c.c===null);PW.o=o?o.e:"";if(!PW.rows.length)PW.rows=[{e:"",c:""}];render();showMsg("","")}catch(e){showMsg("<b>Input error:</b> "+esc(e.message),"bad")}break}}
+$("tabs").addEventListener("click",e=>{const k=e.target.dataset.k;if(k){cur=k;render()}});
+$("keys").addEventListener("mousedown",e=>{if(e.target.closest("button"))e.preventDefault()});
+$("keys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+ if(b.dataset.i!=null){const k=reg[+b.dataset.i];ins(k.t,k.sp);if(shift&&cur==="ABC"){shift=false;render()}}
+ else if(b.dataset.a)act(b.dataset.a)});
+$("keys").addEventListener("input",e=>{const t=e.target,k=t.dataset&&t.dataset.pw;if(!k)return;if(k==="o")PW.o=t.value;else PW.rows[+t.dataset.r][k]=t.value});
+document.addEventListener("keydown",e=>{if(e.key!=="Enter")return;const t=e.target;
+ if((t.classList&&t.classList.contains("kb"))||t.id==="n"){e.preventDefault();if(t.dataset&&t.dataset.pw)pwApply();calc()}});
+render();
+
+/* ================= examples ================= */
+const EX=[["Choose an example…"],
+["xⁿ on [0,1]  → step function","x^n","0","1",40,[-.2,1.2,-.2,1.2],""],
+["sin(n x)/n  → 0 uniformly","sin(n*x)/n","","",30,[-7,7,-1.5,1.5],""],
+["n x e^(−n x²)  → 0 pointwise, peaks grow","n*x*exp(-n*x^2)","","",30,[-1.5,1.5,-3.5,3.5],""],
+["Moving tent (piecewise)","{ 2*n*x if 0<=x<1/(2*n); 2-2*n*x if 1/(2*n)<=x<1/n; 0 otherwise }","","",30,[-.1,1.1,-.3,1.3],""],
+["Steepening ramp (piecewise)","{ 0 if x<0; n*x if 0<=x<1/n; 1 otherwise }","","",30,[-1,2,-.3,1.3],""],
+["xⁿ(1 − xⁿ) on [0,1]","x^n*(1-x^n)","0","1",40,[-.2,1.2,-.1,.5],""],
+["(1 + x/n)ⁿ  → eˣ","(1+x/n)^n","","",40,[-3,3,-1,12],""],
+["√(x² + 1/n)  → |x|","sqrt(x^2+1/n)","","",40,[-2,2,-.5,2.5],""],
+["1/(1 + n x²)  → spike at 0","1/(1+n*x^2)","","",40,[-2,2,-.3,1.3],""],
+["cosⁿ(x)","cos(x)^n","","",30,[-4,4,-1.3,1.3],""],
+["⌊n x⌋ / n  → x","floor(n*x)/n","","",30,[-3,3,-3,3],""],
+["arctan(n x)  → (π/2)·sign(x)","atan(n*x)","","",40,[-3,3,-2,2],""],
+["n sin(x/n)  → x","n*sin(x/n)","","",40,[-6,6,-6,6],""],
+["Parameter: sin(n x)/(n + k)","sin(n*x)/(n+k)","","",30,[-7,7,-1.5,1.5],"k=2"]];
+$("ex").innerHTML=EX.map((e,i)=>`<option value="${i}">${esc(e[0])}</option>`).join("");
+$("ex").onchange=()=>{const e=EX[+$("ex").value];if(!e[1])return;stopPlay();
+ $("fx").value=e[1];$("d0").value=e[2];$("d1").value=e[3];$("nmax").value=e[4];$("cs").value=e[6];$("lim").value="";PX=null;CK=null;$("ckout").style.display="none";$("efind").style.display="none";$("vr").value="x";$("ix").value="n";$("n").value=6;
+ H0={x0:e[5][0],x1:e[5][1],y0:e[5][2],y1:e[5][3]};V={...H0};calc()};
+H0={x0:-.2,x1:1.2,y0:-.2,y1:1.2};$("d0").value="0";$("d1").value="1";$("nmax").value="40";
+window.addEventListener("resize",()=>draw());
+window.addEventListener("load",()=>calc());
+</script><script>
+/* Theme sync: the portfolio page tells this calculator whether it is light or dark. */
+addEventListener('message', function (e) {
+  if (e.source !== window.parent) return;
+  var d = e.data;
+  if (d && d.type === 'plotline-theme' && (d.theme === 'light' || d.theme === 'dark'))
+    document.documentElement.setAttribute('data-theme', d.theme);
+});
+/* redraw the chart when the theme changes */
+new MutationObserver(function () {
+  try { if (document.getElementById('res').style.display == 'block') calc(); } catch (e) {}
+}).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+/* when embedded, tell the page how tall this content is so the frame fits exactly */
+if (self !== top && 'ResizeObserver' in window) {
+  var wrapEl = document.querySelector('.wrap');
+  var report = function () { try { parent.postMessage({ type: 'plotline-height', height: Math.ceil(wrapEl.getBoundingClientRect().height) + 2 }, '*'); } catch (e) {} };
+  new ResizeObserver(report).observe(wrapEl);
+  addEventListener('load', report);
+}
+</script>
+</body></html>

@@ -10,6 +10,8 @@ A static personal blog + portfolio with mathematical animations. No build step.
 | `script.js` | Animations (Fourier epicycles, torus, Cantor set, Lissajous, particle background) and rendering |
 | `plotline.html` | 2D graphing calculator (embedded in the *2D Graph* section) |
 | `plotline3d.html` | 3D graphing calculator (embedded in the *3D Graph* section; loads three.js from a CDN) |
+| `epsilon_delta.html` | ε–δ limit explorer (embedded in the *ε–δ* section; loads math.js from a CDN) |
+| `sequence_of_functions.html` | Sequence-of-functions explorer (embedded in the *Sequences* section; loads math.js from a CDN) |
 | `riemann.html` | Riemann sum calculator (embedded in the *Riemann* section; loads math.js from a CDN) |
 | `fourier.html` | Fourier square-wave lab (embedded in the *Fourier* section) |
 | `data.js` | **All your content**: bio, posts, PDFs, gallery, links |
@@ -21,7 +23,7 @@ A static personal blog + portfolio with mathematical animations. No build step.
 1. Create a GitHub account → **New repository**.
    - For a personal URL, name it exactly `YOUR-USERNAME.github.io` (Public).
    - Otherwise any name works (site will be at `YOUR-USERNAME.github.io/REPO-NAME/`).
-2. Open the repo → **Add file → Upload files** → drag in the *contents* of this folder (`index.html`, `plotline.html`, `plotline3d.html`, `riemann.html`, `fourier.html`, `style.css`, `script.js`, `data.js`, `assets`, `pdfs`, `.nojekyll`) → **Commit changes**.
+2. Open the repo → **Add file → Upload files** → drag in the *contents* of this folder (`index.html`, `plotline.html`, `plotline3d.html`, `epsilon_delta.html`, `sequence_of_functions.html`, `riemann.html`, `fourier.html`, `style.css`, `script.js`, `data.js`, `assets`, `pdfs`, `.nojekyll`) → **Commit changes**.
    (`index.html` must be at the top level of the repo.)
 3. Go to **Settings → Pages**. Under *Build and deployment*, set Source = **Deploy from a branch**, Branch = **main**, folder = **/(root)** → **Save**.
 4. Wait 1–2 minutes. Your site is live at the URL shown on that page.

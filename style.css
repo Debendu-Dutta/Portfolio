@@ -176,7 +176,8 @@ footer{position:relative;text-align:center;padding:2rem 1rem 3rem;color:var(--mu
 .lb figcaption{color:#ddd;margin-top:.7rem}
 
 /* the nav now has more links, so tighten it on mid-size screens before it collapses into the burger */
-@media(min-width:861px) and (max-width:1180px){.nav nav{gap:.95rem}.nav nav a{font-size:.74rem;letter-spacing:.05em}}
+@media(min-width:861px) and (max-width:1380px){.nav nav{gap:.8rem}.nav nav a{font-size:.7rem;letter-spacing:.04em}}
+@media(min-width:861px) and (max-width:1080px){.nav nav{gap:.55rem}.nav nav a{font-size:.62rem;letter-spacing:.02em}}
 
 /* RESPONSIVE */
 @media(max-width:860px){

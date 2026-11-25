@@ -50,7 +50,6 @@ input:focus,select:focus{outline:2px solid var(--ac);border-color:transparent}
 .msg.bad{border-color:var(--bad);color:var(--bad)}.msg.ok{border-color:var(--ok);color:var(--ok)}.msg.warn{border-color:var(--up);color:var(--up)}
 .res{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px}
 .stat{border:1px solid var(--bd);border-radius:10px;padding:10px 12px}.stat b{display:block;font-size:20px;font-family:ui-monospace,Menlo,monospace;word-break:break-all}.stat span{font-size:12px;color:var(--mu)}
-canvas{width:100%;height:340px;display:block}
 .sc{overflow-x:auto;max-height:360px;overflow-y:auto}
 table{border-collapse:collapse;width:100%;font:13px ui-monospace,Menlo,monospace}
 th,td{padding:5px 9px;border-bottom:1px solid var(--bd);text-align:right;white-space:nowrap}th{position:sticky;top:0;background:var(--card);color:var(--mu)}
@@ -62,34 +61,92 @@ code{background:var(--key);padding:1px 5px;border-radius:5px;font-size:12px}
 .tools{display:flex;gap:8px;align-items:center;margin-top:10px;flex-wrap:wrap}
 .tools button{padding:5px 11px;border:1px solid var(--bd);background:transparent;color:var(--mu);border-radius:20px;cursor:pointer;font-size:12px}
 #res{display:none}
-</style></head><body><div class="wrap">
+
+/* ---- graph-first layout ---- */
+.ghead{display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.lg{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mu)}
+.lg i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px}
+.zb{display:flex;gap:6px}
+.zb button{min-width:36px;height:36px;padding:0 10px;border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:9px;font-size:18px;line-height:1;cursor:pointer}
+.zb button.wide{font-size:13px}
+.zb button:active{transform:scale(.95)}
+.gwrap{position:relative;height:460px;border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--bg)}
+.gwrap canvas{position:absolute;inset:0;width:100%;height:100%;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.gwrap.dragging canvas{cursor:grabbing}
+.ro{position:absolute;left:54px;top:8px;padding:3px 8px;border-radius:7px;background:var(--card);border:1px solid var(--bd);font:12px ui-monospace,Menlo,Consolas,monospace;color:var(--tx);pointer-events:none;opacity:.94}
+.ro:empty{display:none}
+.hint{margin:8px 0 0;font-size:12px}
+.gcard .msg{margin:10px 0 0}
+.fbar{display:flex;gap:8px;align-items:center}
+.fl{font:italic 17px "Times New Roman",Georgia,serif;color:var(--mu);white-space:nowrap}
+.fbar input{flex:1 1 auto;min-width:0;width:auto}
+.kbbtn{flex:none;padding:10px 14px;border:1px solid var(--ac);background:transparent;color:var(--ac);border-radius:9px;font-size:14px;font-weight:600;cursor:pointer;white-space:nowrap}
+.kbbtn.on{background:var(--ac);color:#fff}
+.kbpanel{display:none;margin-top:12px;padding-top:4px;border-top:1px solid var(--bd)}
+.kbpanel.open{display:block}
+.kbhead{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0 0}
+.kbhead .sp{flex:1}
+.mini{padding:5px 11px;border:1px solid var(--bd);background:transparent;color:var(--mu);border-radius:20px;cursor:pointer;font-size:12px}
+.card .res + .note{margin:10px 0 0}
+.card details:first-child{margin-top:0}
+@media(max-width:640px){.gwrap{height:360px}.kbopen .gwrap{height:250px}}
+</style></head><body><div class="wrap" id="wrap">
 <h1>∑ Riemann Sum Calculator</h1>
-<p class="sub">Lower &amp; upper sums with piecewise functions, a full math keyboard and an automatic Riemann-integrability check.</p>
+<p class="sub">Drag the graph to pan, scroll or pinch to zoom. Open the ⌨ keyboard only when you want to type a new function.</p>
+
+<div class="card gcard">
+ <div class="ghead">
+  <div class="lg" id="chips"></div>
+  <div class="zb">
+   <button type="button" id="zi" title="Zoom in" aria-label="Zoom in">+</button>
+   <button type="button" id="zo" title="Zoom out" aria-label="Zoom out">−</button>
+   <button type="button" id="zf" class="wide" title="Fit the graph to the function">Fit</button>
+  </div>
+ </div>
+ <div class="gwrap" id="gw"><canvas id="cv"></canvas><div class="ro" id="ro"></div></div>
+ <p class="note hint" id="hint"></p>
+ <div id="msg"></div>
+</div>
 
 <div class="card">
-<div class="toprow">
- <div style="flex:3 1 320px"><label for="fx">f(x) — type, or use the keyboard below</label>
- <input type="text" id="fx" class="kb" value="sin(x) + x^2" autocomplete="off" spellcheck="false"></div>
- <div><label for="ex">Examples</label><select id="ex"></select></div>
+ <div class="toprow">
+  <div style="flex:3 1 300px"><label for="fx">Function</label>
+   <div class="fbar"><span class="fl">f(x) =</span>
+    <input type="text" id="fx" class="kb" value="sin(x) + x^2" autocomplete="off" spellcheck="false">
+    <button type="button" id="kbt" class="kbbtn" aria-expanded="false" aria-controls="kbp" title="Show or hide the math keyboard">⌨ Keyboard</button></div></div>
+  <div><label for="ex">Examples</label><select id="ex"></select></div>
+ </div>
+ <p id="interp"></p>
+ <div class="kbpanel" id="kbp">
+  <div class="kbhead"><span class="note" id="typing">Typing into: f(x)</span><span class="sp"></span>
+   <button type="button" class="mini" id="dk" hidden>Phone keyboard: off</button>
+   <button type="button" class="mini" id="kbx">✕ Close keyboard</button></div>
+  <div class="tabs" id="tabs"></div><div id="keys"></div>
+ </div>
 </div>
-<p id="interp"></p>
-<div class="tabs" id="tabs"></div><div id="keys"></div>
-<div class="tools"><button id="dk" type="button">⌨ Hide phone keyboard: off</button><span class="note">Turn on to use only the on-screen keyboard.</span></div>
+
+<div id="res">
+ <div class="card"><div class="res" id="stats"></div><p class="note" id="leg"></p></div>
+ <div class="card"><details><summary>Subinterval table</summary><div class="sc" id="tbl"></div></details></div>
+</div>
+
+<div class="card">
 <div class="grid">
 <div><label for="a">a (start)</label><input type="text" id="a" class="kb" value="0"></div>
 <div><label for="b">b (end)</label><input type="text" id="b" class="kb" value="pi"></div>
 <div><label for="n">n (subintervals)</label><input type="number" id="n" value="10" min="1" max="10000" step="1"></div>
 <div><label for="h">h = (b − a)/n</label><input type="text" id="h" class="kb"></div>
 </div>
-<div class="grid2">
-<div><label for="vr">Variable</label><input type="text" id="vr" class="kb" value="x" autocomplete="off" spellcheck="false"></div>
-<div><label for="cs">Constants / parameters / helper functions (optional), e.g. k=2, α=0.5, g(t)=t^2+1</label><input type="text" id="cs" class="kb" placeholder="k=2, α=0.5" autocomplete="off" spellcheck="false"></div>
-</div>
 <div class="modes">
 <label><input type="radio" name="m" value="lower"> Lower sum</label>
 <label><input type="radio" name="m" value="upper"> Upper sum</label>
 <label><input type="radio" name="m" value="both" checked> Both</label>
 </div>
+<details><summary>More options — variable, constants &amp; helper functions</summary>
+<div class="grid2">
+<div><label for="vr">Variable</label><input type="text" id="vr" class="kb" value="x" autocomplete="off" spellcheck="false"></div>
+<div><label for="cs">Constants / parameters / helper functions (optional), e.g. k=2, α=0.5, g(t)=t^2+1</label><input type="text" id="cs" class="kb" placeholder="k=2, α=0.5" autocomplete="off" spellcheck="false"></div>
+</div></details>
 <button class="go" id="go">Calculate</button>
 <details><summary>Syntax guide (everything this calculator understands)</summary><ul>
 <li><b>Piecewise:</b> <code>{ x^2 if x&lt;1; 2 if 1&lt;=x&lt;2; 4-x otherwise }</code> (separate pieces with <code>;</code>) — or use the <b>Piecewise</b> tab to build it with boxes. Also works as <code>x&lt;1 ? x : 2</code>.</li>
@@ -100,13 +157,6 @@ code{background:var(--key);padding:1px 5px;border-radius:5px;font-size:12px}
 <li><b>Symbols:</b> × ÷ · − π √ ∛ ≤ ≥ ≠ ∞ ° ⌊x⌋ ⌈x⌉ |x| x² x³ x⁻¹ a₁ and all Greek letters.</li>
 <li><b>Any letter</b> other than the variable is a parameter: define it in the Constants box (<code>k=2</code>). Use <code>*</code> or a space between variables: <code>k x</code>, not <code>kx</code>.</li>
 </ul></details>
-</div>
-
-<div id="msg"></div>
-<div id="res">
-<div class="card"><div class="res" id="stats"></div></div>
-<div class="card"><canvas id="cv"></canvas><p class="note" id="leg"></p></div>
-<div class="card"><div class="sc" id="tbl"></div></div>
 </div>
 </div>
 <script>
@@ -315,8 +365,8 @@ function friendly(msg){
  m=/Undefined function (.+)/.exec(msg);if(m)return"Unknown function “"+m[1]+"”. Check the spelling, or pick it from the Functions tab.";
  return msg}
 
-function calc(){
- const res=$("res");res.style.display="none";
+function calc(opt){opt=opt||{};
+ const res=$("res");
  try{
   if(!window.math)throw new Error("The math engine failed to load (check your internet connection and reload).");
   const expr=$("fx").value.trim();if(!expr)throw new Error("Please enter a function f(x).");
@@ -328,9 +378,12 @@ function calc(){
   if(!(n>=1&&n<=10000))throw new Error("n must be a whole number from 1 to 10000.");
   for(let i=0;i<=20;i++){try{F.probe(a+(b-a)*i/20)}catch(e){if(e.user||USERERR.test(e.message))throw e}}
   const chk=checkIntegrable(F.raw,a,b);
-  if(!chk.ok){showMsg("<b>✗ Not Riemann integrable on ["+fmt(a)+", "+fmt(b)+"] — Riemann sum not possible.</b><br>"+chk.why,"bad");return}
   const eps=(b-a)*1e-9;
   const f=x=>{let v=F.raw(x);if(isFinite(v))return v;for(const d of[eps,-eps,eps*100,-eps*100]){v=F.raw(x+d);if(isFinite(v))return v}return NaN};
+  if(!chk.ok){
+   showMsg("<b>✗ Not Riemann integrable on ["+fmt(a)+", "+fmt(b)+"] — Riemann sum not possible.</b><br>"+chk.why,"bad");
+   res.style.display="none";
+   setGraph({f,a,b,rows:[],mode:"none",robust:true},!opt.keep);return}
   const h=(b-a)/n,k=Math.max(4,Math.min(200,Math.floor(200000/n)));
   let L=0,U=0;const rows=[];
   for(let i=0;i<n;i++){
@@ -352,37 +405,142 @@ function calc(){
   $("tbl").innerHTML="<table><tr><th>i</th><th>xᵢ₋₁</th><th>xᵢ</th><th>mᵢ (inf)</th><th>Mᵢ (sup)</th>"+(mode!="upper"?"<th>mᵢ·h</th>":"")+(mode!="lower"?"<th>Mᵢ·h</th>":"")+"</tr>"+
    show.map(r=>`<tr><td>${r[0]}</td><td>${fmt(r[1])}</td><td>${fmt(r[2])}</td><td>${fmt(r[3])}</td><td>${fmt(r[4])}</td>${mode!="upper"?"<td>"+fmt(r[3]*h)+"</td>":""}${mode!="lower"?"<td>"+fmt(r[4]*h)+"</td>":""}</tr>`).join("")+"</table>"+(rows.length>200?`<p class="note">Showing first 200 of ${n} rows.</p>`:"");
   res.style.display="block";
-  draw(f,a,b,rows,h,mode);
   $("leg").innerHTML="Min/max on each subinterval are found by dense sampling ("+(k+1)+" points per piece), so results are accurate to numerical precision for ordinary functions.";
+  setGraph({f,a,b,rows,mode},!opt.keep);
  }catch(err){
   const t=friendly(String(err.message||err).replace(/</g,"&lt;"));
   showMsg("<b>Input error:</b> "+t,"bad");
  }
 }
 
-function draw(f,a,b,rows,h,mode){
- const cv=$("cv"),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;
- cv.width=W*dpr;cv.height=H*dpr;const c=cv.getContext("2d");c.scale(dpr,dpr);
+/* ================= interactive graph: pan + zoom ================= */
+let G=null,V=null;               /* G = what to draw, V = visible window {x0,x1,y0,y1} */
+const ML=46,MB=24,MT=8,MR=10;    /* plot margins in CSS px */
+let raf=0,settleT=0;
+
+function setGraph(g,fit){G=g;if(fit||!V)V=fitView();
+ $("chips").innerHTML='<span><i style="background:var(--tx)"></i>f(x)</span>'
+  +(g.rows.length&&g.mode!="upper"?'<span><i style="background:var(--lo)"></i>Lower sum</span>':"")
+  +(g.rows.length&&g.mode!="lower"?'<span><i style="background:var(--up)"></i>Upper sum</span>':"");
+ $("ro").textContent="";redraw()}
+
+function fitView(){
+ const w=G.b-G.a,ys=[];
+ for(let i=0;i<=600;i++){const y=G.f(G.a+w*i/600);if(isFinite(y))ys.push(y)}
+ let lo=0,hi=0;
+ if(G.robust&&ys.length){const s=ys.slice().sort((p,q)=>p-q),q=p=>s[Math.min(s.length-1,Math.max(0,Math.floor(p*(s.length-1))))];lo=Math.min(0,q(.03));hi=Math.max(0,q(.97))}
+ else{ys.forEach(y=>{lo=Math.min(lo,y);hi=Math.max(hi,y)});G.rows.forEach(r=>{lo=Math.min(lo,r[3]);hi=Math.max(hi,r[4])})}
+ if(hi==lo){hi+=1;lo-=1}
+ const py=(hi-lo)*.1,px=w*.06;
+ return{x0:G.a-px,x1:G.b+px,y0:lo-py,y1:hi+py}}
+
+function geom(){const cv=$("cv");return{pw:Math.max(10,cv.clientWidth-ML-MR),ph:Math.max(10,cv.clientHeight-MT-MB)}}
+function schedule(){if(!raf)raf=requestAnimationFrame(()=>{raf=0;redraw(true)});clearTimeout(settleT);settleT=setTimeout(()=>redraw(false),140)}
+function zoomAt(px,py,kx,ky){
+ const g=geom(),xv=V.x0+(px-ML)/g.pw*(V.x1-V.x0),yv=V.y1-(py-MT)/g.ph*(V.y1-V.y0);
+ const n={x0:xv-(xv-V.x0)/kx,x1:xv+(V.x1-xv)/kx,y0:yv-(yv-V.y0)/ky,y1:yv+(V.y1-yv)/ky};
+ const sx=n.x1-n.x0,sy=n.y1-n.y0;
+ if(!(sx>1e-9&&sx<1e9)){n.x0=V.x0;n.x1=V.x1}
+ if(!(sy>1e-9&&sy<1e9)){n.y0=V.y0;n.y1=V.y1}
+ V=n;schedule()}
+function panPx(dx,dy){const g=geom(),sx=V.x1-V.x0,sy=V.y1-V.y0,ddx=-dx/g.pw*sx,ddy=dy/g.ph*sy;
+ V={x0:V.x0+ddx,x1:V.x1+ddx,y0:V.y0+ddy,y1:V.y1+ddy};schedule()}
+function readout(px){if(!G||!V)return;const g=geom(),x=V.x0+(px-ML)/g.pw*(V.x1-V.x0),y=G.f(x);
+ $("ro").textContent="x = "+fmt(+x.toPrecision(6))+"   f(x) = "+(isFinite(y)?fmt(+y.toPrecision(6)):"undefined")}
+
+function ticks(lo,hi,target){
+ const span=hi-lo;if(!(span>0))return[];
+ const raw=span/Math.max(2,target),p=Math.pow(10,Math.floor(Math.log10(raw))),m=raw/p;
+ const step=(m<1.5?1:m<3.5?2:m<7.5?5:10)*p,k0=Math.ceil(lo/step),k1=Math.floor(hi/step),out=[];
+ for(let k=k0;k<=k1&&k-k0<200;k++)out.push(+(k*step).toPrecision(12));
+ return out}
+const tf=v=>{if(v===0)return"0";const a=Math.abs(v);return(a>=1e6||a<1e-4)?v.toExponential(1).replace("e+","e"):String(+v.toPrecision(6))};
+
+function redraw(fast){
+ if(!G||!V)return;
+ const cv=$("cv"),dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=cv.clientHeight;if(!W||!H)return;
+ const bw=Math.round(W*dpr),bh=Math.round(H*dpr);if(cv.width!==bw||cv.height!==bh){cv.width=bw;cv.height=bh}
+ const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
  const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
- let lo=0,hi=0;const pts=[];
- for(let i=0;i<=600;i++){const x=a+(b-a)*i/600,y=f(x);pts.push([x,y]);if(isFinite(y)){lo=Math.min(lo,y);hi=Math.max(hi,y)}}
- rows.forEach(r=>{lo=Math.min(lo,r[3]);hi=Math.max(hi,r[4])});
- if(hi==lo){hi+=1;lo-=1}const pad=(hi-lo)*.08;lo-=pad;hi+=pad;
- const m=34,X=x=>m+(x-a)/(b-a)*(W-m-10),Y=y=>H-m-(y-lo)/(hi-lo)*(H-m-10);
- c.clearRect(0,0,W,H);c.font="11px system-ui";c.fillStyle=css("--mu");c.strokeStyle=css("--bd");c.lineWidth=1;
- for(let i=0;i<=4;i++){const y=lo+(hi-lo)*i/4;c.beginPath();c.moveTo(m,Y(y));c.lineTo(W-10,Y(y));c.stroke();c.fillText(fmt(+y.toPrecision(3)),2,Y(y)+4)}
- for(let i=0;i<=4;i++){const x=a+(b-a)*i/4;c.fillText(fmt(+x.toPrecision(3)),X(x)-10,H-m+16)}
- c.strokeStyle=css("--mu");c.beginPath();c.moveTo(m,Y(0));c.lineTo(W-10,Y(0));c.stroke();
- const lc=css("--lo"),uc=css("--up"),dr=(col,idx,fill)=>{c.fillStyle=col;c.strokeStyle=col;rows.forEach(r=>{const x0=X(r[1]),x1=X(r[2]),y=Y(r[idx]),z=Y(0);
-  c.globalAlpha=fill;c.fillRect(x0,Math.min(y,z),x1-x0,Math.abs(z-y));c.globalAlpha=.9;c.strokeRect(x0,Math.min(y,z),x1-x0,Math.abs(z-y))});c.globalAlpha=1};
- if(mode!="lower")dr(uc,4,.14);if(mode!="upper")dr(lc,3,.25);
- c.strokeStyle=css("--tx");c.lineWidth=2;c.beginPath();let pen=false;
- pts.forEach(([x,y])=>{if(!isFinite(y)){pen=false;return}pen?c.lineTo(X(x),Y(y)):c.moveTo(X(x),Y(y));pen=true});c.stroke();
+ const pw=W-ML-MR,ph=H-MT-MB,sx=V.x1-V.x0,sy=V.y1-V.y0;
+ const X=x=>ML+(x-V.x0)/sx*pw,Y=y=>MT+ph-(y-V.y0)/sy*ph;
+ const tx=ticks(V.x0,V.x1,pw/90),ty=ticks(V.y0,V.y1,ph/55);
+ c.save();c.beginPath();c.rect(ML,MT,pw,ph);c.clip();
+ /* grid */
+ c.lineWidth=1;c.strokeStyle=css("--bd");c.beginPath();
+ tx.forEach(t=>{const p=Math.round(X(t))+.5;c.moveTo(p,MT);c.lineTo(p,MT+ph)});
+ ty.forEach(t=>{const p=Math.round(Y(t))+.5;c.moveTo(ML,p);c.lineTo(ML+pw,p)});c.stroke();
+ /* axes */
+ c.strokeStyle=css("--mu");c.lineWidth=1.5;c.beginPath();
+ if(V.y0<0&&V.y1>0){const p=Y(0);c.moveTo(ML,p);c.lineTo(ML+pw,p)}
+ if(V.x0<0&&V.x1>0){const p=X(0);c.moveTo(p,MT);c.lineTo(p,MT+ph)}
+ c.stroke();
+ /* a and b markers */
+ c.setLineDash([5,4]);c.lineWidth=1;c.strokeStyle=css("--ac");c.globalAlpha=.55;c.beginPath();
+ [G.a,G.b].forEach(v=>{const p=X(v);c.moveTo(p,MT);c.lineTo(p,MT+ph)});c.stroke();c.setLineDash([]);c.globalAlpha=1;
+ /* Riemann rectangles */
+ const dr=(col,idx,fill)=>{c.fillStyle=col;c.strokeStyle=col;c.lineWidth=1;const z=Y(0);
+  for(const r of G.rows){const x0=X(r[1]),x1=X(r[2]);if(x1<ML||x0>ML+pw)continue;
+   const y=Y(r[idx]),top=Math.min(y,z),hh=Math.abs(z-y);
+   c.globalAlpha=fill;c.fillRect(x0,top,x1-x0,hh);
+   if(x1-x0>=3){c.globalAlpha=.9;c.strokeRect(x0,top,x1-x0,hh)}}
+  c.globalAlpha=1};
+ if(G.rows.length){if(G.mode!="lower")dr(css("--up"),4,.14);if(G.mode!="upper")dr(css("--lo"),3,.25)}
+ /* the curve, sampled across the whole visible window */
+ const N=Math.max(60,Math.min(1600,Math.round(pw*(fast?.4:1.5))));
+ c.strokeStyle=css("--tx");c.lineWidth=2;c.lineJoin="round";c.beginPath();
+ let pen=false,prev=0;
+ for(let i=0;i<=N;i++){const x=V.x0+sx*i/N,y=G.f(x);
+  if(!isFinite(y)){pen=false;continue}
+  const py=Math.max(-1e5,Math.min(1e5,Y(y))),px=X(x);
+  if(pen&&Math.abs(py-prev)>ph*4)pen=false;
+  pen?c.lineTo(px,py):c.moveTo(px,py);pen=true;prev=py}
+ c.stroke();
+ c.restore();
+ /* frame + tick labels */
+ c.strokeStyle=css("--bd");c.lineWidth=1;c.strokeRect(ML+.5,MT+.5,pw-1,ph-1);
+ c.fillStyle=css("--mu");c.font="11px system-ui,sans-serif";
+ c.textAlign="right";ty.forEach(t=>{const p=Y(t);if(p>=MT-2&&p<=MT+ph+2)c.fillText(tf(t),ML-6,p+4)});
+ c.textAlign="center";tx.forEach(t=>{const p=X(t);if(p>=ML&&p<=ML+pw)c.fillText(tf(t),p,H-MB+16)});
 }
+
+(function(){
+ const cv=$("cv"),gw=$("gw"),pts=new Map();let pinch=null,tapT=0,moved=0;
+ const pos=e=>{const r=cv.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}};
+ cv.addEventListener("pointerdown",e=>{if(!G||!V)return;
+  try{cv.setPointerCapture(e.pointerId)}catch(_){}
+  pts.set(e.pointerId,pos(e));gw.classList.add("dragging");pinch=null;
+  moved=pts.size===1?0:99});
+ cv.addEventListener("pointermove",e=>{
+  const p=pts.get(e.pointerId),q=pos(e);
+  if(!p){if(e.pointerType==="mouse")readout(q.x);return}
+  if(!V)return;
+  pts.set(e.pointerId,q);
+  if(pts.size===1){panPx(q.x-p.x,q.y-p.y);moved+=Math.abs(q.x-p.x)+Math.abs(q.y-p.y)}
+  else if(pts.size===2){
+   const[p1,p2]=[...pts.values()],d=Math.hypot(p1.x-p2.x,p1.y-p2.y),mx=(p1.x+p2.x)/2,my=(p1.y+p2.y)/2;
+   if(pinch&&pinch.d>0&&d>0){zoomAt(pinch.mx,pinch.my,d/pinch.d,d/pinch.d);panPx(mx-pinch.mx,my-pinch.my)}
+   pinch={d,mx,my}}});
+ const up=e=>{if(!pts.has(e.pointerId))return;
+  const wasOne=pts.size===1;pts.delete(e.pointerId);pinch=null;
+  if(!pts.size)gw.classList.remove("dragging");
+  if(wasOne&&moved<6&&e.type==="pointerup"&&G&&V){const q=pos(e),now=Date.now();
+   if(now-tapT<320){V=fitView();tapT=0;redraw()}else{tapT=now;readout(q.x)}}};
+ cv.addEventListener("pointerup",up);cv.addEventListener("pointercancel",up);
+ cv.addEventListener("pointerleave",e=>{if(e.pointerType==="mouse"&&!pts.size)$("ro").textContent=""});
+ cv.addEventListener("wheel",e=>{if(!G||!V)return;e.preventDefault();
+  const q=pos(e),d=e.deltaY||e.deltaX,k=Math.exp(-d*(e.deltaMode===1?.05:.0015));
+  zoomAt(q.x,q.y,e.altKey?1:k,e.shiftKey?1:k)},{passive:false});
+ const mid=()=>{const g=geom();return[ML+g.pw/2,MT+g.ph/2]};
+ $("zi").onclick=()=>{if(V){const[x,y]=mid();zoomAt(x,y,1.5,1.5)}};
+ $("zo").onclick=()=>{if(V){const[x,y]=mid();zoomAt(x,y,1/1.5,1/1.5)}};
+ $("zf").onclick=()=>{if(G){V=fitView();redraw()}};
+})();
 
 /* ================= keyboard ================= */
 let tgt=$("fx"),reg=[],cur="123",shift=false;
-document.addEventListener("focusin",e=>{if(e.target.classList&&e.target.classList.contains("kb"))tgt=e.target});
+const TYPING={fx:"f(x)",a:"a",b:"b",h:"h",vr:"variable",cs:"constants"};
+document.addEventListener("focusin",e=>{if(e.target.classList&&e.target.classList.contains("kb")){tgt=e.target;$("typing").textContent="Typing into: "+(TYPING[e.target.id]||"piecewise box")}});
 const fire=el=>el.dispatchEvent(new Event("input",{bubbles:true}));
 function setCaret(el,a,b){el.focus();try{el.setSelectionRange(a,b===undefined?a:b)}catch(_){}}
 function ins(text,sp){
@@ -472,7 +630,7 @@ const TABS=["123","ABC","Greek","Functions","Logic","Symbols","Piecewise"];
 function render(){reg=[];if(!tgt.isConnected)tgt=$("fx");
  const h={"123":pBasic,ABC:pABC,Greek:pGreek,Functions:pFunc,Logic:pLogic,Symbols:pSym,Piecewise:pPiece}[cur]();
  $("tabs").innerHTML=TABS.map(k=>`<button type="button" class="tab ${k==cur?"on":""}" data-k="${k}">${k}</button>`).join("");
- $("keys").innerHTML=h}
+ $("keys").innerHTML=h;applyIM()}
 function pwText(){const parts=PW.rows.filter(r=>r.e.trim()&&r.c.trim()).map(r=>r.e.trim()+" if "+r.c.trim());if(PW.o.trim())parts.push(PW.o.trim()+" otherwise");
  return parts.length?"{ "+parts.join("; ")+" }":""}
 function pwApply(){const t=pwText();if(!t){showMsg("<b>Piecewise:</b> fill in at least one “expression if condition” row.","bad");return false}$("fx").value=t;return true}
@@ -498,7 +656,24 @@ $("keys").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)
 $("keys").addEventListener("input",e=>{const t=e.target,k=t.dataset&&t.dataset.pw;if(!k)return;if(k==="o")PW.o=t.value;else PW.rows[+t.dataset.r][k]=t.value});
 document.addEventListener("keydown",e=>{if(e.key!=="Enter")return;const t=e.target;
  if((t.classList&&t.classList.contains("kb"))||t.id==="n"){e.preventDefault();if(t.dataset&&t.dataset.pw)pwApply();calc()}});
-let hide=false;$("dk").onclick=()=>{hide=!hide;document.querySelectorAll("input.kb").forEach(i=>i.setAttribute("inputmode",hide?"none":"text"));$("dk").textContent="⌨ Hide phone keyboard: "+(hide?"on":"off")};
+/* the math keyboard is hidden until the user asks for it */
+const coarse=!!(window.matchMedia&&matchMedia("(pointer:coarse)").matches);
+let kbOpen=false,usePhone=false;
+function applyIM(){const hide=coarse&&!usePhone;
+ document.querySelectorAll("input.kb").forEach(i=>i.setAttribute("inputmode",hide&&(kbOpen||i.id==="fx")?"none":"text"))}
+function setKb(open,focus){
+ kbOpen=open;$("kbp").classList.toggle("open",open);$("kbt").classList.toggle("on",open);
+ $("kbt").setAttribute("aria-expanded",String(open));$("wrap").classList.toggle("kbopen",open);applyIM();
+ if(open){if(focus!==false){tgt=$("fx");setCaret($("fx"),$("fx").value.length)}
+  setTimeout(()=>{try{$("kbp").scrollIntoView({block:"nearest",behavior:"smooth"})}catch(_){}},60)}
+ else if(coarse&&document.activeElement&&document.activeElement.blur)document.activeElement.blur()}
+$("kbt").addEventListener("mousedown",e=>e.preventDefault());
+$("kbt").onclick=()=>setKb(!kbOpen);
+$("kbx").onclick=()=>setKb(false);
+$("fx").addEventListener("focus",()=>{if(coarse&&!kbOpen)setKb(true,false)});
+$("dk").hidden=!coarse;
+$("dk").onclick=()=>{usePhone=!usePhone;$("dk").textContent="Phone keyboard: "+(usePhone?"on":"off");applyIM()};
+$("tabs").addEventListener("mousedown",e=>{if(e.target.closest("button"))e.preventDefault()});
 render();
 
 /* ================= examples ================= */
@@ -521,10 +696,16 @@ $("ex").innerHTML=EX.map((e,i)=>`<option value="${i}">${esc(e[0])}</option>`).jo
 $("ex").onchange=()=>{const e=EX[+$("ex").value];if(!e[1])return;$("fx").value=e[1];$("a").value=e[2];$("b").value=e[3];$("n").value=e[4];$("cs").value=e[5];$("vr").value="x";syncH();calc()};
 
 syncH();
-document.querySelectorAll("input[name=m]").forEach(r=>r.onchange=()=>{if($("res").style.display=="block")calc()});
-$("go").onclick=calc;
-window.addEventListener("resize",()=>{if($("res").style.display=="block")calc()});
-window.addEventListener("load",calc);
+document.querySelectorAll("input[name=m]").forEach(r=>r.onchange=()=>calc({keep:true}));
+$("go").onclick=()=>calc();
+/* live update: the graph follows what you type */
+let liveT=0;
+document.addEventListener("input",e=>{const id=e.target&&e.target.id;if(!id||!/^(fx|a|b|n|h|vr|cs)$/.test(id))return;
+ clearTimeout(liveT);const keep=id==="n"||id==="h";liveT=setTimeout(()=>calc({keep}),450)});
+window.addEventListener("resize",()=>redraw());
+if("ResizeObserver" in window)new ResizeObserver(()=>redraw()).observe($("gw"));
+$("hint").textContent=coarse?"Drag to pan · pinch to zoom · double-tap to fit":"Drag to pan · scroll to zoom (Shift = x only, Alt = y only) · double-click to fit";
+window.addEventListener("load",()=>calc());
 </script><script>
 /* Theme sync: the portfolio page tells this calculator whether it is light or dark. */
 addEventListener('message', function (e) {
@@ -535,7 +716,7 @@ addEventListener('message', function (e) {
 });
 /* redraw the chart when the theme changes */
 new MutationObserver(function () {
-  try { if (document.getElementById('res').style.display == 'block') calc(); } catch (e) {}
+  try { redraw(); } catch (e) {}
 }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 /* when embedded, tell the page how tall this content is so the frame fits exactly */
 if (self !== top && 'ResizeObserver' in window) {
