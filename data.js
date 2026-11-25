@@ -235,10 +235,11 @@ As promised, the previous multiple \\(14\\beta\\approx0.9950\\) is \\(\\le1\\).<
 
   /* ---------------- PDF LIBRARY ----------------
      1) Copy the PDF into the  pdfs/  folder.  2) Add a line below.          */
-  pdfs: [
-    { title: "Sample: Cantor set picture", desc: "Placeholder PDF — replace with your own notes, slides or papers.", file: "sample-notes.pdf", tag: "sample" },
-   { title: "MA 105: Introduction to Real Numbers", desc: "Lecture slides on the algebraic, order, completeness, Archimedean and density properties of R, with proofs and a look at floating-point arithmetic.", file: "Introduction_to_Real_Number.pdf", tag: "slides" },
-  ],
+ pdfs: [
+  { title: "Sample: Cantor set picture", desc: "Placeholder PDF — replace with your own notes, slides or papers.", file: "sample-notes.pdf", tag: "sample" },
+  { title: "MA 105: Introduction to Real Numbers", desc: "Lecture slides on the algebraic, order, completeness, Archimedean and density properties of R, with proofs and a look at floating-point arithmetic.", file: "Introduction_to_Real_Number.pdf", tag: "slides" },
+  { title: "Review of Sequence and Series of Functions", desc: "Slides on pointwise and uniform convergence, Cauchy criterion, M-test, Abel's and Dirichlet's tests, and term-by-term limits, integration and differentiation, with counterexamples throughout.", file: "Sequence_Of_FUnctions_And_Series_Of_functions.pdf", tag: "slides" },
+],
 
   
 
